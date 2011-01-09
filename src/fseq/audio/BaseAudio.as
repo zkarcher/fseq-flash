@@ -24,7 +24,7 @@ public class BaseAudio extends Object
 	//--------------------------------------
 	// CLASS CONSTANTS
 	//--------------------------------------
-	public static const LERP_SAMPLES :Number = 10;	// Smoothly transition between pitch/width/etc changes
+	public static const LERP_SAMPLES :Number = 100;	// Smoothly transition between pitch/width/etc changes
 	
 	//--------------------------------------
 	//  CONSTRUCTOR
@@ -79,7 +79,7 @@ public class BaseAudio extends Object
 	}
 	
 	// The pitchPhase is the same for all BaseAudio objects that are playing concurrently.
-	public function getSample( pitchPhase:Number ) :Number {
+	public function getSample( pitchPhase:Number, resetSync:Boolean ) :Number {
 		// Extend me!
 		return 0;
 	}
