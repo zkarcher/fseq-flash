@@ -1,4 +1,4 @@
-package fseq {
+package fseq.model {
 
 /**
  *	Class description.
@@ -47,7 +47,7 @@ public class FormantSequence extends Object
 			}
 		}
 
-		if( inUnoiced ) {
+		if( inUnvoiced ) {
 			_unvoiced = inUnvoiced;
 		} else {
 			_unvoiced = new Vector.<Operator>();
@@ -71,6 +71,10 @@ public class FormantSequence extends Object
 	//--------------------------------------
 	//  PUBLIC METHODS
 	//--------------------------------------
+	public function pitch() :Operator { return _pitch; }
+	public function voiced( id:int ) :Operator { return _voiced[id]; }
+	public function unvoiced( id:int ) :Operator { return _unvoiced[id]; }
+
 	public function clone() :FormantSequence {
 		// Duplicate the pitch
 		var pitchClone:Operator = _pitch.clone();
@@ -84,7 +88,7 @@ public class FormantSequence extends Object
 		}
 		
 		// Duplicate the unvoiced operators
-		vor uClone:Vector.<Operator> = new Vector.<Operator>();
+		var uClone:Vector.<Operator> = new Vector.<Operator>();
 		for( o=0; o<UNVOICED_OPS; o++ ) {
 			uClone.push( _unvoiced[o].clone() );
 		}

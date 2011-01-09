@@ -53,8 +53,16 @@ public class Operator extends Object
 	//--------------------------------------
 	//  PUBLIC METHODS
 	//--------------------------------------
+	public function frame( id:int ) :OperatorFrame {
+		return _frames[ id ];
+	}
+	
 	public function clone() :Operator {
-		
+		var useFrames:Vector.<OperatorFrame> = new Vector.<OperatorFrame>();
+		for( var i:int=0; i<FormantSequence.FRAMES; i++ ) {
+			useFrames.push( _frames[i].clone() );
+		}
+		return new Operator( useFrames );
 	}
 	
 	//--------------------------------------

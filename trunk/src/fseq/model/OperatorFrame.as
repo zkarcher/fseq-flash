@@ -16,7 +16,8 @@ public class OperatorFrame extends Object
 	
 	// Convert semitone number to hertz
 	public function get freq() :Number {
-		return 0;	// TODO
+		// TODO This formula is wrong, should mimic the FS1R. Need to reverse-engineer that
+		return Math.pow( 2.0, semitone*(1.0/12.0) ) * 55.0; 
 	}
 	
 	public function clone() :OperatorFrame {
