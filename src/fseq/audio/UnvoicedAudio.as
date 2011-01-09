@@ -28,13 +28,12 @@ public class UnvoicedAudio extends BaseAudio
 	//  CONSTRUCTOR
 	//--------------------------------------
 	public function UnvoicedAudio() {
+		super();
 	}
 	
 	//--------------------------------------
 	//  PRIVATE VARIABLES
 	//--------------------------------------
-	private var _freqPhase :Number = 0;
-	private var _freqInc :Number = 0;	// Every sample, increment the freqPhase by this amount
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -43,9 +42,10 @@ public class UnvoicedAudio extends BaseAudio
 	//--------------------------------------
 	//  PUBLIC METHODS
 	//--------------------------------------
+	/*
 	public override function playFrame( frame:OperatorFrame, width:Number, immediately:Boolean=false ) :void {
-		
 	}
+	*/
 
 	// The pitchPhase is the same for all BaseAudio objects that are playing concurrently.
 	public override function getSample( pitchPhase:Number ) :Number {

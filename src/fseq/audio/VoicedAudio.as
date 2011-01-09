@@ -17,6 +17,7 @@ import caurina.transitions.Tweener;
 import com.zacharcher.color.*;
 import com.zacharcher.math.*;
 import fseq.audio.*;
+import fseq.model.*;
 
 public class VoicedAudio extends BaseAudio
 {
@@ -28,11 +29,13 @@ public class VoicedAudio extends BaseAudio
 	//  CONSTRUCTOR
 	//--------------------------------------
 	public function VoicedAudio() {
+		super();
 	}
 	
 	//--------------------------------------
 	//  PRIVATE VARIABLES
 	//--------------------------------------
+	private var _freqPhase :Number = 0;	// One cycle is range: 0..2*Math.PI 
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -42,14 +45,18 @@ public class VoicedAudio extends BaseAudio
 	//  PUBLIC METHODS
 	//--------------------------------------
 	public override function playFrame( frame:OperatorFrame, width:Number, immediately:Boolean=false ) :void {
-
+		super.playFrame( frame, width, immediately );
+		
+		// Reset the freq oscillator
+		_freqPhase = 0;
 	}
 
 	// The pitchPhase is the same for all BaseAudio objects that are playing concurrently.
 	public override function getSample( pitchPhase:Number ) :Number {
 		updateTween();
 		
-		return 0;
+		_freqPhase += _freqInc;
+		return (Math.cos( pitchPhase ) - 1) * Math.sin(_freqPhase) * 0.5; 
 	}
 	
 	//--------------------------------------
