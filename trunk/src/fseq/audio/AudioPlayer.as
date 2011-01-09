@@ -48,6 +48,7 @@ public class AudioPlayer extends Object
 	private var _samplesInFrame :Number = 0;
 	private var _pitchPhase :Number = 0;	// One cycle is range: 0..2*Math.PI
 	private var _pitchInc :Number = 0;	// Pitch phase increment. Added to _pitchPhase every frame, to oscillate the pitch.
+	private var _isResetSync :Boolean = true;
 	
 	private var _voiced :Vector.<VoicedAudio>;
 	private var _unvoiced :Vector.<UnvoicedAudio>;
@@ -135,14 +136,21 @@ public class AudioPlayer extends Object
 			
 			// Increment the pitch
 			_pitchPhase += _pitchInc;
+			if( _pitchPhase > 2*Math.PI ) {
+				_pitchPhase -= 2*Math.PI;
+				// Voiced formants rely on knowing when the pitch phase flips around from 2*PI back to 0.
+				_isResetSync = true;
+			} else {
+				_isResetSync = false;
+			}
 
 			// Gather the samples
 			var out:Number = 0;
 			for( v=0; v<FormantSequence.VOICED_OPS; v++ ) {
-				out += _voiced[v].getSample( _pitchPhase );
+				out += _voiced[v].getSample( _pitchPhase, _isResetSync );
 			}
 			for( v=0; v<FormantSequence.UNVOICED_OPS; v++ ) {
-				out += _unvoiced[v].getSample( _pitchPhase );
+				out += _unvoiced[v].getSample( _pitchPhase, _isResetSync );
 			}
 			
 			// Volume adjust

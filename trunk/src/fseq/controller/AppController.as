@@ -54,10 +54,10 @@ public class AppController extends Sprite
 		for( var f:int=0; f<512; f++ ) {
 			_seq.pitch().frame(f).semitone = 12;	// 110hz
 			for( var o:int=0; o<8; o++ ) {
-				_seq.voiced(o).frame(f).amp = 1.0;
-				_seq.voiced(o).frame(f).semitone = Rand.int( 12*6 );
-				_seq.unvoiced(o).frame(f).amp = 1.0;
-				_seq.unvoiced(o).frame(f).semitone = Rand.int( 12*6 );
+				_seq.voiced(o).frame(f).amp = Rand.float();
+				_seq.voiced(o).frame(f).semitone = Rand.int( 12*7 );
+				_seq.unvoiced(o).frame(f).amp = Rand.float();
+				_seq.unvoiced(o).frame(f).semitone = Rand.int( 12*7 );
 			}
 		}
 		

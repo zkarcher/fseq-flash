@@ -48,7 +48,7 @@ public class UnvoicedAudio extends BaseAudio
 	*/
 
 	// The pitchPhase is the same for all BaseAudio objects that are playing concurrently.
-	public override function getSample( pitchPhase:Number ) :Number {
+	public override function getSample( pitchPhase:Number, resetSync:Boolean ) :Number {
 		updateTween();
 		
 		// Extend me!

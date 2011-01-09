@@ -46,17 +46,19 @@ public class VoicedAudio extends BaseAudio
 	//--------------------------------------
 	public override function playFrame( frame:OperatorFrame, width:Number, immediately:Boolean=false ) :void {
 		super.playFrame( frame, width, immediately );
-		
-		// Reset the freq oscillator
-		_freqPhase = 0;
 	}
 
 	// The pitchPhase is the same for all BaseAudio objects that are playing concurrently.
-	public override function getSample( pitchPhase:Number ) :Number {
+	public override function getSample( pitchPhase:Number, resetSync:Boolean ) :Number {
 		updateTween();
 		
+		// Reset the freq oscillator so a coherent pitched formant is created
+		if( resetSync ) {
+			_freqPhase = 0;
+		}
+		
 		_freqPhase += _freqInc;
-		return (Math.cos( pitchPhase ) - 1) * Math.sin(_freqPhase) * 0.5; 
+		return (Math.cos( pitchPhase ) - 1) * Math.sin(_freqPhase) * 0.5 * _amp;
 	}
 	
 	//--------------------------------------
