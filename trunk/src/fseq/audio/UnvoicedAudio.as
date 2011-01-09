@@ -34,6 +34,7 @@ public class UnvoicedAudio extends BaseAudio
 	//--------------------------------------
 	//  PRIVATE VARIABLES
 	//--------------------------------------
+	private var _freqPhase :Number = 0;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -52,7 +53,8 @@ public class UnvoicedAudio extends BaseAudio
 		updateTween();
 		
 		// Extend me!
-		return 0;
+		_freqPhase += _freqInc + Math.random() * 0.1;
+		return Math.sin( _freqPhase ) * _amp;
 	}
 	
 	//--------------------------------------
