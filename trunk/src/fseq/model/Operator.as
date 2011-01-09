@@ -1,4 +1,4 @@
-package fseq {
+package fseq.model {
 
 /**
  *	Class description.
@@ -16,10 +16,9 @@ import flash.geom.*;
 import caurina.transitions.Tweener;
 import com.zacharcher.color.*;
 import com.zacharcher.math.*;
-import fseq.controller.*;
 import fseq.model.*;
 
-public class Thing extends Sprite
+public class Operator extends Object
 {
 	//--------------------------------------
 	// CLASS CONSTANTS
@@ -28,13 +27,24 @@ public class Thing extends Sprite
 	//--------------------------------------
 	//  CONSTRUCTOR
 	//--------------------------------------
-	public function Thing() {
-		trace("Hello world!");
+	public function Operator( inFrames:Vector.<OperatorFrame>=null ) {
+		super();
+		
+		if( inFrames ) {
+			_frames = inFrames;
+		} else {
+			// Start with empty frames
+			_frames = new Vector.<OperatorFrame>;
+			for( var i:int=0; i<FormantSequence.FRAMES; i++ ) {
+				_frames.push( new OperatorFrame(0,0) );
+			}
+		}
 	}
 	
 	//--------------------------------------
 	//  PRIVATE VARIABLES
 	//--------------------------------------
+	private var _frames :Vector.<OperatorFrame>;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -43,6 +53,9 @@ public class Thing extends Sprite
 	//--------------------------------------
 	//  PUBLIC METHODS
 	//--------------------------------------
+	public function clone() :Operator {
+		
+	}
 	
 	//--------------------------------------
 	//  EVENT HANDLERS
