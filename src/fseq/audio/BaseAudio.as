@@ -24,7 +24,7 @@ public class BaseAudio extends Object
 	//--------------------------------------
 	// CLASS CONSTANTS
 	//--------------------------------------
-	public static const LERP_SAMPLES :Number = 100;	// Smoothly transition between pitch/width/etc changes
+	public static const LERP_SAMPLES :Number = 10;	// Smoothly transition between pitch/width/etc changes
 	
 	//--------------------------------------
 	//  CONSTRUCTOR
@@ -72,6 +72,9 @@ public class BaseAudio extends Object
 
 			_oldFreqInc = _newFreqInc;
 			_newFreqInc = inc;
+			
+			_oldAmp = _newAmp;
+			_newAmp = frame.amp;
 
 			_oldWidth = _newWidth;
 			_newWidth = inWidth;
