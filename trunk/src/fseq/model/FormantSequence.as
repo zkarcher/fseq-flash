@@ -16,6 +16,7 @@ import flash.geom.*;
 import caurina.transitions.Tweener;
 import com.zacharcher.color.*;
 import com.zacharcher.math.*;
+import fseq.audio.*;
 
 public class FormantSequence extends Object
 {
@@ -67,6 +68,10 @@ public class FormantSequence extends Object
 	//--------------------------------------
 	//  GETTER/SETTERS
 	//--------------------------------------
+	public function get samplesPerFrame() :Number {
+		// TODO: Needs a real value based on speed adjustment
+		return AudioPlayer.SAMPLE_RATE / 4;
+	}
 	
 	//--------------------------------------
 	//  PUBLIC METHODS

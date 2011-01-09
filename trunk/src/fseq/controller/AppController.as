@@ -92,7 +92,7 @@ public class AppController extends Sprite
 	private function clickHandler( e:MouseEvent ) :void {
 		if( !_player ) {
 			_player = new AudioPlayer();
-			_player.play();
+			_player.play( _seq );
 		} else {
 			_player.stop();
 			_player = null;

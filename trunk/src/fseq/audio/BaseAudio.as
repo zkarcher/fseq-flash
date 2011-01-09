@@ -30,12 +30,12 @@ public class BaseAudio extends Object
 	//  CONSTRUCTOR
 	//--------------------------------------
 	public function BaseAudio() {
+		super();
 	}
 	
 	//--------------------------------------
 	//  PRIVATE VARIABLES
 	//--------------------------------------
-	protected var _freqPhase :Number = 0;	// One cycle is range: 0..2*Math.PI 
 	protected var _freqInc :Number = 0;	// Every sample, increment the freqPhase by this amount
 	protected var _amp :Number = 0;
 	protected var _width :Number = 1;	// 0: no formant shaping. 2: extreme formant shaping, sounds like a pulse train.
@@ -93,10 +93,10 @@ public class BaseAudio extends Object
 	//--------------------------------------
 	protected function updateTween() :void {
 		// If _tween is 0, the tween is not active, so exit early.
-		if( !_tweenAmt ) return;
+		if( !_tween ) return;
 		
 		// The tween progresses...
-		_tween = Math.max( 0, _tweenAmt - 1.0/LERP_SAMPLES );
+		_tween = Math.max( 0, _tween - 1.0/LERP_SAMPLES );
 		
 		// Tween between the _old and _new values.
 		_freqInc = Num.interpolate( _newFreqInc, _oldFreqInc, _tween );

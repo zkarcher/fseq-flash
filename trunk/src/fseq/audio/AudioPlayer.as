@@ -42,11 +42,15 @@ public class AudioPlayer extends Object
 	private var _sound :Sound;
 	private var _chan :SoundChannel;
 	
+	private var _hasEverPlayed :Boolean = false;
 	private var _seq :FormantSequence;
-	private var _frame :int;
-	private var _samplesInFrame :int;
-	private var _pitchPhase :Number;	// One cycle is range: 0..2*Math.PI
-	private var _pitchInc :Number;	// Pitch phase increment. Added to _pitchPhase every frame, to oscillate the pitch.
+	private var _frame :int = 0;
+	private var _samplesInFrame :Number = 0;
+	private var _pitchPhase :Number = 0;	// One cycle is range: 0..2*Math.PI
+	private var _pitchInc :Number = 0;	// Pitch phase increment. Added to _pitchPhase every frame, to oscillate the pitch.
+	
+	private var _voiced :Vector.<VoicedAudio>;
+	private var _unvoiced :Vector.<UnvoicedAudio>;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -55,8 +59,21 @@ public class AudioPlayer extends Object
 	//--------------------------------------
 	//  PUBLIC METHODS
 	//--------------------------------------
-	public function play() :void {
+	public function play( inSeq:FormantSequence ) :void {
 		_isActive = true;
+		_seq = inSeq;
+		
+		// Create Voiced & Unvoiced audio layers
+		if( !_voiced || !_unvoiced ) {
+			_voiced = new Vector.<VoicedAudio>();
+			for( var v:int=0; v<FormantSequence.VOICED_OPS; v++ ) {
+				_voiced.push( new VoicedAudio() );
+			}
+			_unvoiced = new Vector.<UnvoicedAudio>();
+			for( var u:int=0; u<FormantSequence.UNVOICED_OPS; u++ ) {
+				_unvoiced.push( new UnvoicedAudio() );
+			}
+		}
 		
 		// If the sound is not playing, then start it
 		if( !_sound ) {
@@ -76,15 +93,60 @@ public class AudioPlayer extends Object
 	//--------------------------------------
 	//  EVENT HANDLERS
 	//--------------------------------------
-	private var zzz :Number = 0;
-	
 	private function sampleData( e:SampleDataEvent ) :void {
 		if( !_isActive ) return;	// Let the SampleDataEvent return with no data
 		
+		var i:int;
+		var v:int;	// iterate over voiced & unvoiced
+		
+		// First time playing? Then immediately set the freq/amp/etc of all the voices
+		if( !_hasEverPlayed ) {
+			_hasEverPlayed = true;
+			
+			for( i=0; i<_voiced.length; i++ ) {
+				_voiced[i].playFrame( _seq.voiced(i).frame(_frame), 1.0, true );
+			}
+			
+			for( i=0; i<_unvoiced.length; i++ ) {
+				_unvoiced[i].playFrame( _seq.unvoiced(i).frame(_frame), 1.0, true );
+			}
+			
+			_pitchInc = _seq.pitch().frame(_frame).freq * ((2*Math.PI) / SAMPLE_RATE);
+		}
+		
 		//if(DEBUG) trace("Sample data!", e.position);
-		for( var i:int=0; i < BUFFER_SIZE; i++ ) {
-			zzz += 440.0*2*Math.PI / SAMPLE_RATE;
-			var out:Number = Math.sin( zzz );
+		for( i=0; i < BUFFER_SIZE; i++ ) {
+			_samplesInFrame++;
+			if( _samplesInFrame > _seq.samplesPerFrame ) {
+				_samplesInFrame -= _seq.samplesPerFrame;
+				_frame = (_frame+1) % FormantSequence.FRAMES;	// Advance to next frame
+				
+				_pitchInc = _seq.pitch().frame(_frame).freq * ((2*Math.PI) / SAMPLE_RATE);
+				
+				// Tell all audio voices to play the new frame
+				var o:int;
+				for( v=0; v<_voiced.length; v++ ) {
+					_voiced[v].playFrame( _seq.voiced(v).frame(_frame), 1.0 );
+				}
+				for( v=0; v<_unvoiced.length; v++ ) {
+					_unvoiced[v].playFrame( _seq.unvoiced(v).frame(_frame), 1.0 );
+				}
+			}
+			
+			// Increment the pitch
+			_pitchPhase += _pitchInc;
+
+			// Gather the samples
+			var out:Number = 0;
+			for( v=0; v<FormantSequence.VOICED_OPS; v++ ) {
+				out += _voiced[v].getSample( _pitchPhase );
+			}
+			for( v=0; v<FormantSequence.UNVOICED_OPS; v++ ) {
+				out += _unvoiced[v].getSample( _pitchPhase );
+			}
+			
+			// Volume adjust
+			out *= (1.0/8);
 			
 			// Write to the sound buffer
 			e.data.writeFloat( out );	// left channel
