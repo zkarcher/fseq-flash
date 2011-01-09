@@ -26,7 +26,7 @@ public class AudioPlayer extends Object
 	// CLASS CONSTANTS
 	//--------------------------------------
 	public static const SAMPLE_RATE :Number = 44100;
-	public static const BUFFER_SIZE :int = 2048;	// mono size, not stereo, so less than 4096 plz
+	public static const BUFFER_SIZE :int = 4096;	// mono size, not stereo, so less than 4096 plz
 	
 	//--------------------------------------
 	//  CONSTRUCTOR
@@ -154,7 +154,7 @@ public class AudioPlayer extends Object
 			}
 			
 			// Volume adjust
-			out *= (1.0/8);
+			out *= (1.0/16);
 			
 			// Write to the sound buffer
 			e.data.writeFloat( out );	// left channel

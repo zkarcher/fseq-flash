@@ -70,7 +70,7 @@ public class FormantSequence extends Object
 	//--------------------------------------
 	public function get samplesPerFrame() :Number {
 		// TODO: Needs a real value based on speed adjustment
-		return AudioPlayer.SAMPLE_RATE / 4;
+		return AudioPlayer.SAMPLE_RATE / 20;
 	}
 	
 	//--------------------------------------
