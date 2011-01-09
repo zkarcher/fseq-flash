@@ -1,4 +1,4 @@
-package fseq {
+package fseq.audio {
 
 /**
  *	Class description.
@@ -16,10 +16,9 @@ import flash.geom.*;
 import caurina.transitions.Tweener;
 import com.zacharcher.color.*;
 import com.zacharcher.math.*;
-import fseq.controller.*;
-import fseq.model.*;
+import fseq.audio.*;
 
-public class Thing extends Sprite
+public class UnvoicedAudio extends BaseAudio
 {
 	//--------------------------------------
 	// CLASS CONSTANTS
@@ -28,13 +27,14 @@ public class Thing extends Sprite
 	//--------------------------------------
 	//  CONSTRUCTOR
 	//--------------------------------------
-	public function Thing() {
-		trace("Hello world!");
+	public function UnvoicedAudio() {
 	}
 	
 	//--------------------------------------
 	//  PRIVATE VARIABLES
 	//--------------------------------------
+	private var _freqPhase :Number = 0;
+	private var _freqInc :Number = 0;	// Every sample, increment the freqPhase by this amount
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -43,6 +43,17 @@ public class Thing extends Sprite
 	//--------------------------------------
 	//  PUBLIC METHODS
 	//--------------------------------------
+	public override function playFrame( frame:OperatorFrame, width:Number, immediately:Boolean=false ) :void {
+		
+	}
+
+	// The pitchPhase is the same for all BaseAudio objects that are playing concurrently.
+	public override function getSample( pitchPhase:Number ) :Number {
+		updateTween();
+		
+		// Extend me!
+		return 0;
+	}
 	
 	//--------------------------------------
 	//  EVENT HANDLERS

@@ -1,4 +1,4 @@
-package fseq {
+package fseq.controller {
 
 /**
  *	Class description.
@@ -16,10 +16,8 @@ import flash.geom.*;
 import caurina.transitions.Tweener;
 import com.zacharcher.color.*;
 import com.zacharcher.math.*;
-import fseq.controller.*;
-import fseq.model.*;
 
-public class Thing extends Sprite
+public class AppController extends Sprite
 {
 	//--------------------------------------
 	// CLASS CONSTANTS
@@ -28,8 +26,27 @@ public class Thing extends Sprite
 	//--------------------------------------
 	//  CONSTRUCTOR
 	//--------------------------------------
-	public function Thing() {
-		trace("Hello world!");
+	private static var _instance:AppController;
+	
+	public static function get instance():AppController
+	{
+		return initialize();
+	}
+	
+	public static function initialize():AppController
+	{
+		if (_instance == null){
+			_instance = new AppController();
+		}
+		return _instance;
+	}
+	
+	public function AppController() {
+		super();
+		if( _instance != null ) throw new Error("Error:AppController already initialised.");
+		if( _instance == null ) _instance = this;
+		
+		
 	}
 	
 	//--------------------------------------
