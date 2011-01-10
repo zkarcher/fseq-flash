@@ -25,8 +25,6 @@ public class AudioPlayer extends Object
 	//--------------------------------------
 	// CLASS CONSTANTS
 	//--------------------------------------
-	public static const SAMPLE_RATE :Number = 44100;
-	public static const BUFFER_SIZE :int = 4096;	// mono size, not stereo, so less than 4096 plz
 	
 	//--------------------------------------
 	//  CONSTRUCTOR
@@ -69,20 +67,20 @@ public class AudioPlayer extends Object
 		_seq = inSeq;
 		
 		if( !_buffer || !_pitchPhases || !_resetSyncs || !_setFrameIds ) {
-			_buffer = new Vector.<Number>(BUFFER_SIZE, true);
-			_pitchPhases = new Vector.<Number>(BUFFER_SIZE, true);
-			_resetSyncs = new Vector.<Boolean>(BUFFER_SIZE, true);
-			_setFrameIds = new Vector.<int>(BUFFER_SIZE, true );
+			_buffer = new Vector.<Number>(Const.BUFFER_SIZE, true);
+			_pitchPhases = new Vector.<Number>(Const.BUFFER_SIZE, true);
+			_resetSyncs = new Vector.<Boolean>(Const.BUFFER_SIZE, true);
+			_setFrameIds = new Vector.<int>(Const.BUFFER_SIZE, true );
 		}
 		
 		// Create Voiced & Unvoiced audio layers
 		if( !_voiced || !_unvoiced ) {
 			_voiced = new Vector.<VoicedAudio>();
-			for( var v:int=0; v<FormantSequence.VOICED_OPS; v++ ) {
+			for( var v:int=0; v<Const.VOICED_OPS; v++ ) {
 				_voiced.push( new VoicedAudio() );
 			}
 			_unvoiced = new Vector.<UnvoicedAudio>();
-			for( var u:int=0; u<FormantSequence.UNVOICED_OPS; u++ ) {
+			for( var u:int=0; u<Const.UNVOICED_OPS; u++ ) {
 				_unvoiced.push( new UnvoicedAudio() );
 			}
 		}
@@ -114,7 +112,7 @@ public class AudioPlayer extends Object
 		//if(DEBUG) trace("Sample data!", e.position);
 		
 		// Fill our buffer vectors with info on the pitch phase, frames, etc
-		for( i=0; i<BUFFER_SIZE; i++ ) {
+		for( i=0; i<Const.BUFFER_SIZE; i++ ) {
 			_buffer[i] = 0;	// clear the audio buffer
 			
 			// Determine when to advance to the next frame
@@ -122,10 +120,10 @@ public class AudioPlayer extends Object
 			if( _samplesInFrame > _seq.samplesPerFrame ) {
 				_samplesInFrame -= _seq.samplesPerFrame;
 
-				_frame = (_frame+1) % FormantSequence.FRAMES;	// Advance to next frame
+				_frame = (_frame+1) % Const.FRAMES;	// Advance to next frame
 				_setFrameIds[i] = _frame;
 				
-				_pitchInc = _seq.pitch().frame(_frame).freq * ((2*Math.PI) / SAMPLE_RATE);
+				_pitchInc = _seq.pitch().frame(_frame).freq * ((2*Math.PI) / Const.SAMPLE_RATE);
 				
 			} else {
 				_setFrameIds[i] = -1;
@@ -147,15 +145,15 @@ public class AudioPlayer extends Object
 		
 		// Now that we've prepared our various Vectors, we tell each voice to add sounds to the buffer using
 		// all this info.
-		for( i=0; i<FormantSequence.VOICED_OPS; i++ ) {
+		for( i=0; i<Const.VOICED_OPS; i++ ) {
 			_voiced[i].addSamples( _buffer, _pitchPhases, _resetSyncs, _setFrameIds, _seq.voiced(i) );
 		}
-		for( i=0; i<FormantSequence.UNVOICED_OPS; i++ ) {
+		for( i=0; i<Const.UNVOICED_OPS; i++ ) {
 			_unvoiced[i].addSamples( _buffer, _pitchPhases, _resetSyncs, _setFrameIds, _seq.unvoiced(i) );
 		}
 		
 		// Now we can create the final audio
-		for( i=0; i<BUFFER_SIZE; i++ ) {
+		for( i=0; i<Const.BUFFER_SIZE; i++ ) {
 			// Volume adjust
 			var out:Number = _buffer[i] / 16;
 

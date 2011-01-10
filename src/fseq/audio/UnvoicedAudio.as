@@ -53,7 +53,7 @@ public class UnvoicedAudio extends BaseAudio
 	public override function addSamples( buffer:Vector.<Number>, pitchPhases:Vector.<Number>, resetSyncs:Vector.<Boolean>, setFrameIds:Vector.<int>, operator:Operator ) :void {
 		updateTween();
 		
-		for( var i:int=0; i<AudioPlayer.BUFFER_SIZE; i++ ) {
+		for( var i:int=0; i<Const.BUFFER_SIZE; i++ ) {
 			// Time for a new frame?
 			if( setFrameIds[i] >= 0 ) {
 				playFrame( operator.frame( setFrameIds[i] ));

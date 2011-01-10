@@ -24,7 +24,6 @@ public class BaseAudio extends Object
 	//--------------------------------------
 	// CLASS CONSTANTS
 	//--------------------------------------
-	public static const LERP_SAMPLES :Number = 1;	// "Smoothly" transition between pitch/width/etc changes
 	
 	//--------------------------------------
 	//  CONSTRUCTOR
@@ -60,7 +59,7 @@ public class BaseAudio extends Object
 	//--------------------------------------
 	public function playFrame( frame:OperatorFrame ) :void {
 		// inc (_freqInc) will be added to _freqPhase every sample. This drives the oscillator.
-		var inc:Number = frame.freq * ((2*Math.PI) / AudioPlayer.SAMPLE_RATE);
+		var inc:Number = frame.freq * ((2*Math.PI) / Const.SAMPLE_RATE);
 		
 		// If this is the very first frame, immediately set the values
 		if( !_hasEverPlayed ) {
@@ -104,7 +103,7 @@ public class BaseAudio extends Object
 		if( !_tween ) return;
 		
 		// The tween progresses...
-		_tween = Math.max( 0, _tween - 1.0/LERP_SAMPLES );
+		_tween = Math.max( 0, _tween - 1.0/Const.LERP_SAMPLES );
 		
 		// Tween between the _old and _new values.
 		_freqInc = Num.interpolate( _newFreqInc, _oldFreqInc, _tween );

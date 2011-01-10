@@ -23,9 +23,6 @@ public class FormantSequence extends Object
 	//--------------------------------------
 	// CLASS CONSTANTS
 	//--------------------------------------
-	public static const FRAMES :int = 512;
-	public static const VOICED_OPS :int = 8;
-	public static const UNVOICED_OPS :int = 8;
 	
 	//--------------------------------------
 	//  CONSTRUCTOR
@@ -43,7 +40,7 @@ public class FormantSequence extends Object
 			_voiced = inVoiced;
 		} else {
 			_voiced = new Vector.<Operator>();
-			for( var v:int=0; v<VOICED_OPS; v++ ) {
+			for( var v:int=0; v<Const.VOICED_OPS; v++ ) {
 				_voiced.push( new Operator() );
 			}
 		}
@@ -52,7 +49,7 @@ public class FormantSequence extends Object
 			_unvoiced = inUnvoiced;
 		} else {
 			_unvoiced = new Vector.<Operator>();
-			for( var u:int=0; u<UNVOICED_OPS; u++ ) {
+			for( var u:int=0; u<Const.UNVOICED_OPS; u++ ) {
 				_unvoiced.push( new Operator() );
 			}
 		}
@@ -84,7 +81,7 @@ public class FormantSequence extends Object
 	//--------------------------------------
 	public function get samplesPerFrame() :Number {
 		// TODO: Needs a real value based on speed adjustment
-		return AudioPlayer.SAMPLE_RATE / 4;
+		return Const.SAMPLE_RATE / 4;
 	}
 	
 	//--------------------------------------
@@ -102,13 +99,13 @@ public class FormantSequence extends Object
 		
 		// Duplicate the voiced operators
 		var vClone:Vector.<Operator> = new Vector.<Operator>();
-		for( o=0; o<VOICED_OPS; o++ ) {
+		for( o=0; o<Const.VOICED_OPS; o++ ) {
 			vClone.push( _voiced[o].clone() );
 		}
 		
 		// Duplicate the unvoiced operators
 		var uClone:Vector.<Operator> = new Vector.<Operator>();
-		for( o=0; o<UNVOICED_OPS; o++ ) {
+		for( o=0; o<Const.UNVOICED_OPS; o++ ) {
 			uClone.push( _unvoiced[o].clone() );
 		}
 		
