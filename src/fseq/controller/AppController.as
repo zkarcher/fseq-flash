@@ -17,7 +17,9 @@ import caurina.transitions.Tweener;
 import com.zacharcher.color.*;
 import com.zacharcher.math.*;
 import fseq.audio.*;
+import fseq.events.*;
 import fseq.model.*;
+import fseq.net.*;
 
 public class AppController extends Sprite
 {
@@ -48,6 +50,7 @@ public class AppController extends Sprite
 		if( _instance != null ) throw new Error("Error:AppController already initialised.");
 		if( _instance == null ) _instance = this;
 		
+		/*
 		_seq = new FormantSequence();
 		
 		// Testing: Play some random crap
@@ -60,6 +63,12 @@ public class AppController extends Sprite
 				_seq.unvoiced(o).frame(f).semitone = Rand.int( 12*7 );
 			}
 		}
+		*/
+		
+		_loader = new SyxLoader();
+		_loader.addEventListener( CustomEvent.LOAD_COMPLETE, loadComplete, false, 0, true );
+		_loader.addEventListener( CustomEvent.LOAD_FAILED, loadFailed, false, 0, true );
+		_loader.initWithURL("p01 - ShoobyDo.syx");
 		
 		addEventListener( Event.ENTER_FRAME, initEnterFrame );
 	}
@@ -77,6 +86,7 @@ public class AppController extends Sprite
 	//--------------------------------------
 	private var _seq :FormantSequence;
 	private var _player :AudioPlayer;
+	private var _loader :SyxLoader;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -97,6 +107,14 @@ public class AppController extends Sprite
 			_player.stop();
 			_player = null;
 		}
+	}
+	
+	private function loadFailed( e:CustomEvent ) :void {
+		trace("** Load failed, bawwwwwwwww", e.data['error']);
+	}
+	
+	private function loadComplete( e:CustomEvent ) :void {
+		_seq = _loader.formantSequence;
 	}
 	
 	//--------------------------------------
