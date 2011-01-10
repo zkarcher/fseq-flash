@@ -58,6 +58,20 @@ public class FormantSequence extends Object
 		}
 	}
 	
+	public function initWithBytes( pitchBytes:Vector.<uint>, voicedFreqAr:Array, voicedLevelAr:Array, unvoicedFreqAr:Array, unvoicedLevelAr:Array ) :void {
+		for( var f:int=0; f<pitchBytes.length; f++ ) {
+			_pitch.frame(f).freq = OperatorFrame.syxToFreq( pitchBytes[f] );
+			
+			var op:int;
+			for( op=0; op<8; op++ ) {
+				_voiced[op].frame(f).freq = OperatorFrame.syxToFreq( voicedFreqAr[op][f] );
+				_voiced[op].frame(f).amp = OperatorFrame.syxToAmp( voicedLevelAr[op][f] );
+				_unvoiced[op].frame(f).freq = OperatorFrame.syxToFreq( unvoicedFreqAr[op][f] );
+				_unvoiced[op].frame(f).amp = OperatorFrame.syxToAmp( unvoicedLevelAr[op][f] );
+			}
+		}
+	}
+	
 	//--------------------------------------
 	//  PRIVATE VARIABLES
 	//--------------------------------------
