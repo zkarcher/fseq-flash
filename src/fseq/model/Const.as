@@ -13,9 +13,33 @@ public class Const extends Object
 	public static const VOICED_OPS :int = 8;
 	public static const UNVOICED_OPS :int = 8;
 	
+	// View modes & color palettes, etc
+	public static const FREQ :String = "FREQ";
+	public static const AMP :String = "AMP";
+	
+	// Operator types
+	public static const PITCH :String = "PITCH";
+	public static const VOICED :String = "VOICED";
+	public static const UNVOICED :String = "UNVOICED";
+	
 	public function Const()
 	{
 		super();
+	}
+	
+	public static function color( type:String, id:int=0 ) :uint {
+		switch( type ) {
+			case Const.PITCH:
+				return 0xffffff;
+			
+			case Const.VOICED:
+				return [0xff4801,0xfe1d16,0xfe1f72,0xfd2096,0xf626ff,0xc749ff,0x9350ff,0x6b78ff][id];
+				
+			case Const.UNVOICED:
+				return [0x00feed,0x00f6c0,0x00ec86,0x00db40,0x08c827,0x1cb827,0x459b34,0x787a52][id];
+		}
+		trace("** SequenceView: What weird color are you looking for? I only accept", Const.PITCH, Const.VOICED, Const.UNVOICED, "...", type, id);
+		return 0x444444;
 	}
 	
 }

@@ -1,5 +1,5 @@
 TODO
 ====
 
-* Everything, lol
-* switch on frame tweening again?
+* Tween the playback frequency
+* spread loaded fseqs across 128-512 range
