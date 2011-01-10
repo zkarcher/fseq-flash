@@ -35,7 +35,7 @@ public class Operator extends Object
 		} else {
 			// Start with empty frames
 			_frames = new Vector.<OperatorFrame>;
-			for( var i:int=0; i<FormantSequence.FRAMES; i++ ) {
+			for( var i:int=0; i<Const.FRAMES; i++ ) {
 				_frames.push( new OperatorFrame(0,0) );
 			}
 		}
@@ -59,7 +59,7 @@ public class Operator extends Object
 	
 	public function clone() :Operator {
 		var useFrames:Vector.<OperatorFrame> = new Vector.<OperatorFrame>();
-		for( var i:int=0; i<FormantSequence.FRAMES; i++ ) {
+		for( var i:int=0; i<Const.FRAMES; i++ ) {
 			useFrames.push( _frames[i].clone() );
 		}
 		return new Operator( useFrames );
