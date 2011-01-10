@@ -42,7 +42,7 @@ public class SyxLoader extends BaseLoader
 	//--------------------------------------
 	//  GETTER/SETTERS
 	//--------------------------------------
-	public function get formantSequence() :FormantSequence { return null; }
+	public function get formantSequence() :FormantSequence { return _seq; }
 	
 	//--------------------------------------
 	//  PUBLIC METHODS

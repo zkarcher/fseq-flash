@@ -20,6 +20,7 @@ import fseq.audio.*;
 import fseq.events.*;
 import fseq.model.*;
 import fseq.net.*;
+import fseq.view.*;
 
 public class AppController extends Sprite
 {
@@ -115,6 +116,7 @@ public class AppController extends Sprite
 	
 	private function loadComplete( e:CustomEvent ) :void {
 		_seq = _loader.formantSequence;
+		addChild( new SequenceView( Const.FREQ, _seq ));
 	}
 	
 	//--------------------------------------
