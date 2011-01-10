@@ -86,6 +86,10 @@ public class SyxLoader extends BaseLoader
 		
 		var loopStart :uint = (ba.readUnsignedByte() << 7) | ba.readUnsignedByte();	// 00-7F each
 		var loopEnd :uint = (ba.readUnsignedByte() << 7) | ba.readUnsignedByte();	// 00-7F each
+		
+		// ShoobyDoo has silent frames after the loopEnd (498)
+		trace("Loop start:", loopStart, "/ Loop end:", loopEnd);
+
 		var loopMode :uint = ba.readUnsignedByte();	// 0:one way, 1:round
 		var speedAdjust :uint = ba.readUnsignedByte();	// 00-7F
 		var velSensitivity :uint = ba.readUnsignedByte();	// 00-07
@@ -130,6 +134,10 @@ public class SyxLoader extends BaseLoader
 			for( i=0; i<8; i++ ) {
 				voicedFreq[i][f] |= ba.readUnsignedByte();	// 00-7F
 			}
+			
+			// Lowest value is apparently 8933 (0x22e5), hmmm....
+			//trace("ShoobyDo lowest voiced freq:", voicedFreq[0][f].toString(16));
+			
 			// voiced level
 			for( i=0; i<8; i++ ) {
 				voicedLevel[i][f] = ba.readUnsignedByte();	// 00-7F
@@ -142,6 +150,7 @@ public class SyxLoader extends BaseLoader
 			for( i=0; i<8; i++ ) {
 				unvoicedFreq[i][f] |= ba.readUnsignedByte();	// 00-7F
 			}
+
 			// unvoiced level
 			for( i=0; i<8; i++ ) {
 				unvoicedLevel[i][f] = ba.readUnsignedByte();	// 00-7F
