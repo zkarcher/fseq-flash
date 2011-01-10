@@ -42,20 +42,49 @@ public class SequenceView extends Sprite
 		var lines:Sprite = new Sprite();
 		addChild( lines );
 		
-		for( var op:int=0; op<8; op++ ) {
-			var color:uint = Const.color( Const.VOICED, op );
+		var op:int, f:int, color:uint;
+		
+		// VOICED
+		for( op=0; op<8; op++ ) {
+			color = Const.color( Const.VOICED, op );
 			lines.graphics.lineStyle( 1, color, 1.0 );
 			lines.graphics.moveTo( 0,0 );
 			
-			for( var f:int=0; f<512; f++ ) {
-				
+			for( f=0; f<512; f++ ) {
 				if( mode == Const.FREQ ) {
 					lines.graphics.lineTo( f, 512 - seq.voiced(op).frame(f).freq * (512.0/0x3fff) );
 					
 				} else if( mode == Const.AMP ) {
-					
+					trace("TODO");
 					
 				}
+			}
+		}
+		
+		// UNVOICED
+		for( op=0; op<8; op++ ) {
+			color = Const.color( Const.UNVOICED, op );
+			lines.graphics.lineStyle( 1, color, 1.0 );
+			lines.graphics.moveTo( 0,0 );
+			
+			for( f=0; f<512; f++ ) {
+				if( mode == Const.FREQ ) {
+					lines.graphics.lineTo( f, 512 - seq.unvoiced(op).frame(f).freq * (512.0/0x3fff) );
+					
+				} else if( mode == Const.AMP ) {
+					trace("TODO");
+					
+				}
+			}
+		}
+		
+		// PITCH
+		if( mode == Const.FREQ ) {
+			color = Const.color( Const.PITCH );
+			lines.graphics.lineStyle( 1, color, 1.0 );
+			lines.graphics.moveTo( 0,0 );
+			for( f=0; f<512; f++ ) {
+				lines.graphics.lineTo( f, 512 - seq.pitch().frame(f).freq * (512.0/0x3fff));
 			}
 		}
 	}
