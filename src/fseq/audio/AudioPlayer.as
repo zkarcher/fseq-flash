@@ -47,7 +47,7 @@ public class AudioPlayer extends Object
 	
 	private var _seq :FormantSequence;
 	private var _frame :int = 0;
-	private var _samplesInFrame :Number = 999999;	// Force a new frame to become active
+	private var _samplesInFrame :Number = 0;	// Force a new frame to become active
 	private var _pitchPhase :Number = 0;	// One cycle is range: 0..2*Math.PI
 	private var _pitchInc :Number = 0;	// Pitch phase increment. Added to _pitchPhase every frame, to oscillate the pitch.
 	private var _isResetSync :Boolean = true;
@@ -58,6 +58,7 @@ public class AudioPlayer extends Object
 	//--------------------------------------
 	//  GETTER/SETTERS
 	//--------------------------------------
+	public function get frame() :int { return _frame; }
 	
 	//--------------------------------------
 	//  PUBLIC METHODS

@@ -57,6 +57,8 @@ public class SyxLoader extends BaseLoader
 	//  PRIVATE & PROTECTED INSTANCE METHODS
 	//--------------------------------------
 	protected override function handleLoaderComplete() :void {
+		var i:int;
+		
 		var ba:ByteArray = ByteArray(_urlLoader.data);
 		ba.position = 0;
 		
@@ -121,46 +123,82 @@ public class SyxLoader extends BaseLoader
 			unvoicedLevel.push( new Vector.<uint>( totalFrames, true ));
 		}
 		
+		// We will always expand sequences out to 512 frames, as faithfully as possible to the originals.
+		// Since the original sequences are sometimes shorter than 512 frames long, we'll set more frames than
+		// we'll load. (A loaded sequence with 128 frames will set 4 frames for each 1 frame loaded.)
+		var setFrame:int = 0;	// Increment as we set each frame
+		
 		for( var f:int=0; f<totalFrames; f++ ) {
 			// Read the pitch
-			pitch[f] = (ba.readUnsignedByte() << 7) | ba.readUnsignedByte();	// both 00-7f? Really?
+			pitch[setFrame] = (ba.readUnsignedByte() << 7) | ba.readUnsignedByte();	// Two 7-bit bytes, make a 14-bit word
 			
 			// voiced freqs: high bytes first
-			var i:int = 0;
 			var hi1:uint, lo1:uint;
-			for( i=0; i<8; i++ ) { 
+			for( i=0; i<Const.VOICED_OPS; i++ ) { 
 				var hibyte:uint = ba.readUnsignedByte();
 				if( i==0 ) hi1 = hibyte;
-				voicedFreq[i][f] = hibyte << 7;	// 00-7F
+				voicedFreq[i][setFrame] = hibyte << 7;	// 00-7F
 			}
 			// voiced freqs: low bytes
-			for( i=0; i<8; i++ ) {
+			for( i=0; i<Const.VOICED_OPS; i++ ) {
 				var lobyte:uint = ba.readUnsignedByte();
 				if( i==0 ) lo1 = lobyte;
-				voicedFreq[i][f] |= lobyte;	// 00-7F
+				voicedFreq[i][setFrame] |= lobyte;	// 00-7F
 			}
 			
 			// Lowest value is apparently 8933 (0x22e5), hmmm....
 			//trace("ShoobyDo lowest voiced freq:", voicedFreq[0][f].toString(16));
-			
-			trace("hi&lo:", hi1.toString(16), lo1.toString(16), "... V1 freq:", voicedFreq[0][f], "==", voicedFreq[0][f].toString(16));
+			//trace("hi&lo:", hi1.toString(16), lo1.toString(16), "... V1 freq:", voicedFreq[0][f], "==", voicedFreq[0][f].toString(16));
 			
 			// voiced level
-			for( i=0; i<8; i++ ) {
-				voicedLevel[i][f] = ba.readUnsignedByte();	// 00-7F
+			for( i=0; i<Const.VOICED_OPS; i++ ) {
+				voicedLevel[i][setFrame] = ba.readUnsignedByte();	// 00-7F
 			}
+			
 			// unvoiced freqs: high bytes first
-			for( i=0; i<8; i++ ) { 
-				unvoicedFreq[i][f] = ba.readUnsignedByte() << 7;	// 00-7F
+			for( i=0; i<Const.UNVOICED_OPS; i++ ) { 
+				unvoicedFreq[i][setFrame] = ba.readUnsignedByte() << 7;	// 00-7F
 			}
 			// unvoiced freqs: low bytes
-			for( i=0; i<8; i++ ) {
-				unvoicedFreq[i][f] |= ba.readUnsignedByte();	// 00-7F
+			for( i=0; i<Const.UNVOICED_OPS; i++ ) {
+				unvoicedFreq[i][setFrame] |= ba.readUnsignedByte();	// 00-7F
 			}
-
 			// unvoiced level
-			for( i=0; i<8; i++ ) {
-				unvoicedLevel[i][f] = ba.readUnsignedByte();	// 00-7F
+			for( i=0; i<Const.UNVOICED_OPS; i++ ) {
+				unvoicedLevel[i][setFrame] = ba.readUnsignedByte();	// 00-7F
+			}
+			
+			setFrame++;	// Always increment at least one frame
+			var dupeFrames:int = 0;
+			switch( totalFrames ) {
+				case 512:
+					// No padding needed.
+					break;
+				case 384:
+					// TODO: It would be nice to interpolate some frames or something
+					if( (f%3) == 2 ) dupeFrames = 1;
+					break;
+				case 256:
+					dupeFrames = 1;
+					break;
+				case 128:
+					dupeFrames = 3;
+					break;
+			}
+			
+			// If we are loading less than 512 frames, some of the loaded frames need to be duplicated to fill
+			// all 512 frames of our FormantSequence.
+			for( var d:int=0; d<dupeFrames; d++ ) {
+				pitch[setFrame+1] = pitch[setFrame];
+				for( i=0; i<Const.VOICED_OPS; i++ ) {
+					voicedFreq[i][setFrame+1] = voicedFreq[i][setFrame];
+					voicedLevel[i][setFrame+1] = voicedLevel[i][setFrame];
+				}
+				for( i=0; i<Const.UNVOICED_OPS; i++ ) {
+					unvoicedFreq[i][setFrame+1] = unvoicedFreq[i][setFrame];
+					unvoicedLevel[i][setFrame+1] = unvoicedLevel[i][setFrame];
+				}
+				setFrame++;
 			}
 		}
 		
