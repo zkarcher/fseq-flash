@@ -63,7 +63,7 @@ public class UnvoicedAudio extends BaseAudio
 			
 			// Create the sound
 			_freqPhase += _freqInc + ((Math.random()*2)-1) * 0.3;
-			buffer[i] += Math.sin( _freqPhase ) * _amp;
+			buffer[i] += Math.sin( _freqPhase ) * _amp * 0.75;
 		}
 	}
 	

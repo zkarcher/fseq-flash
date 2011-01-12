@@ -108,19 +108,20 @@ public class SyxLoader extends BaseLoader
 		
 		// Now it's time to read the frames.
 		var totalFrames:int = (dataFormat+1) * 128;
+		trace("Total incoming frames:", totalFrames);
 		
 		// We'll store the frame values in these Vectors:
-		var pitch:Vector.<uint> = new Vector.<uint>( totalFrames, true );
+		var pitch:Vector.<uint> = new Vector.<uint>( Const.FRAMES, true );
 		var voicedFreq:Array = [];
 		var voicedLevel:Array = [];
 		var unvoicedFreq:Array = [];
 		var unvoicedLevel:Array = [];
 		// Create a vector for each voiced/unvoiced operator
 		for( var v:int=0; v<8; v++ ) {
-			voicedFreq.push( new Vector.<uint>( totalFrames, true ));
-			voicedLevel.push( new Vector.<uint>( totalFrames, true ));
-			unvoicedFreq.push( new Vector.<uint>( totalFrames, true ));
-			unvoicedLevel.push( new Vector.<uint>( totalFrames, true ));
+			voicedFreq.push( new Vector.<uint>( Const.FRAMES, true ));
+			voicedLevel.push( new Vector.<uint>( Const.FRAMES, true ));
+			unvoicedFreq.push( new Vector.<uint>( Const.FRAMES, true ));
+			unvoicedLevel.push( new Vector.<uint>( Const.FRAMES, true ));
 		}
 		
 		// We will always expand sequences out to 512 frames, as faithfully as possible to the originals.
@@ -189,14 +190,14 @@ public class SyxLoader extends BaseLoader
 			// If we are loading less than 512 frames, some of the loaded frames need to be duplicated to fill
 			// all 512 frames of our FormantSequence.
 			for( var d:int=0; d<dupeFrames; d++ ) {
-				pitch[setFrame+1] = pitch[setFrame];
+				pitch[setFrame] = pitch[setFrame-1];
 				for( i=0; i<Const.VOICED_OPS; i++ ) {
-					voicedFreq[i][setFrame+1] = voicedFreq[i][setFrame];
-					voicedLevel[i][setFrame+1] = voicedLevel[i][setFrame];
+					voicedFreq[i][setFrame] = voicedFreq[i][setFrame-1];
+					voicedLevel[i][setFrame] = voicedLevel[i][setFrame-1];
 				}
 				for( i=0; i<Const.UNVOICED_OPS; i++ ) {
-					unvoicedFreq[i][setFrame+1] = unvoicedFreq[i][setFrame];
-					unvoicedLevel[i][setFrame+1] = unvoicedLevel[i][setFrame];
+					unvoicedFreq[i][setFrame] = unvoicedFreq[i][setFrame-1];
+					unvoicedLevel[i][setFrame] = unvoicedLevel[i][setFrame-1];
 				}
 				setFrame++;
 			}
@@ -223,6 +224,7 @@ public class SyxLoader extends BaseLoader
 		// Make a formant sequence with this stuff
 		_seq = new FormantSequence();
 		_seq.initWithBytes( pitch, voicedFreq, voicedLevel, unvoicedFreq, unvoicedLevel );
+		_seq.tempoAdjust = Math.max( totalFrames / 512.0, 0.4 );
 	}
 	
 	private function assertEquals( a:uint, b:uint, description:String=null ) :uint {
