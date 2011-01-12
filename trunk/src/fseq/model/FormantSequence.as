@@ -75,13 +75,13 @@ public class FormantSequence extends Object
 	private var _pitch :Operator;	// Disregards its own amplitude
 	private var _voiced :Vector.<Operator>;
 	private var _unvoiced :Vector.<Operator>;
-	
+	public var tempoAdjust :Number = 1.0;
 	//--------------------------------------
 	//  GETTER/SETTERS
 	//--------------------------------------
 	public function get samplesPerFrame() :Number {
 		// TODO: Needs a real value based on speed adjustment
-		return Const.SAMPLE_RATE / 100;
+		return (Const.SAMPLE_RATE / 100.0) * tempoAdjust;
 	}
 	
 	//--------------------------------------
