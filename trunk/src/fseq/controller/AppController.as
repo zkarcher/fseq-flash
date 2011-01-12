@@ -13,6 +13,7 @@ package fseq.controller {
 import flash.display.*;
 import flash.events.*;
 import flash.geom.*;
+import fl.controls.*;
 import caurina.transitions.Tweener;
 import com.zacharcher.color.*;
 import com.zacharcher.math.*;
@@ -51,44 +52,37 @@ public class AppController extends Sprite
 		if( _instance != null ) throw new Error("Error:AppController already initialised.");
 		if( _instance == null ) _instance = this;
 		
-		/*
-		_seq = new FormantSequence();
-		
-		// Testing: Play some random crap
-		for( var f:int=0; f<512; f++ ) {
-			_seq.pitch().frame(f).semitone = 12;	// 110hz
-			for( var o:int=0; o<8; o++ ) {
-				_seq.voiced(o).frame(f).amp = Rand.float();
-				_seq.voiced(o).frame(f).semitone = Rand.int( 12*7 );
-				_seq.unvoiced(o).frame(f).amp = Rand.float();
-				_seq.unvoiced(o).frame(f).semitone = Rand.int( 12*7 );
-			}
+		_presets = new ComboBox();
+		for each( var str:String in Presets.fs1rSequences() ) {
+			_presets.addItem( {label:str, data:str} );
 		}
-		*/
+		_presets.x = 530;
+		_presets.y = 20;
+		_presets.width += 100;
+		_presets.rowCount = 30;
+		_presets.addEventListener( Event.CHANGE, presetChangeHandler, false, 0, true );
+		addChild( _presets );
+		presetChangeHandler();	// immediately load a sequence
 		
-		_loader = new SyxLoader();
-		_loader.addEventListener( CustomEvent.LOAD_COMPLETE, loadComplete, false, 0, true );
-		_loader.addEventListener( CustomEvent.LOAD_FAILED, loadFailed, false, 0, true );
-		_loader.initWithURL("p01 - ShoobyDo.syx");
-		//_loader.initWithURL("freqtest.syx");
+		_sweep = new Shape();
+		with( _sweep.graphics ) {
+			beginFill( 0xffff00, 0.8 );
+			drawRect( 0, 0, 2, 512 );
+			endFill();
+		}
+		addChild( _sweep );
+		addEventListener( Event.ENTER_FRAME, enterFrameHandler, false, 0, true );
+	}
 		
-		addEventListener( Event.ENTER_FRAME, initEnterFrame );
-	}
-	
-	// Set up mouse listeners and whatever else we need the stage for
-	private function initEnterFrame( e:Event ) :void {
-		if( !stage ) return;
-		removeEventListener( Event.ENTER_FRAME, initEnterFrame );
-
-		stage.addEventListener( MouseEvent.CLICK, clickHandler );
-	}
-	
 	//--------------------------------------
 	//  PRIVATE VARIABLES
 	//--------------------------------------
 	private var _seq :FormantSequence;
 	private var _player :AudioPlayer;
 	private var _loader :SyxLoader;
+	private var _presets :ComboBox;
+	private var _seqView :SequenceView;
+	private var _sweep :Shape;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -101,7 +95,7 @@ public class AppController extends Sprite
 	//--------------------------------------
 	//  EVENT HANDLERS
 	//--------------------------------------
-	private function clickHandler( e:MouseEvent ) :void {
+	private function sequenceClickHandler( e:MouseEvent ) :void {
 		if( !_player ) {
 			_player = new AudioPlayer();
 			_player.play( _seq );
@@ -111,13 +105,41 @@ public class AppController extends Sprite
 		}
 	}
 	
+	private function presetChangeHandler( e:Event=null ) :void {
+		if( _seqView && _seqView.parent ) _seqView.parent.removeChild( _seqView );
+		if( _player ) {
+			_player.stop();
+			_player = null;
+		}
+		
+		// Flash components are evil. Index is -1 when launched
+		var idx:int = Math.max( 0, _presets.selectedIndex );
+		var path:String = Presets.pathToFS1RSequenceId( idx );
+		
+		_loader = new SyxLoader();
+		_loader.addEventListener( CustomEvent.LOAD_COMPLETE, loadComplete, false, 0, true );
+		_loader.addEventListener( CustomEvent.LOAD_FAILED, loadFailed, false, 0, true );
+		_loader.initWithURL( path );
+	}
+	
 	private function loadFailed( e:CustomEvent ) :void {
 		trace("** Load failed, bawwwwwwwww", e.data['error']);
 	}
 	
 	private function loadComplete( e:CustomEvent ) :void {
 		_seq = _loader.formantSequence;
-		addChild( new SequenceView( Const.FREQ, _seq ));
+		_seqView = new SequenceView( Const.FREQ, _seq );
+		_seqView.addEventListener( MouseEvent.CLICK, sequenceClickHandler, false, 0, true );
+		addChildAt( _seqView, 0 );
+	}
+	
+	private function enterFrameHandler( e:Event ) :void {
+		if( !_player ) {
+			_sweep.visible = false;
+		} else {
+			_sweep.visible = true;
+			_sweep.x = _player.frame;
+		}
 	}
 	
 	//--------------------------------------

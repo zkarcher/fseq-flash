@@ -54,8 +54,8 @@ public class SequenceView extends Sprite
 				if( mode == Const.FREQ ) {
 					//lines.graphics.lineTo( f, 512 - seq.voiced(op).frame(f).freq * (512.0/0x3fff) );
 					with( lines.graphics ) {
-						beginFill( color, 1.0 );
-						drawRect( f, 512 - seq.unvoiced(op).frame(f).freq * (512.0/0x3fff), 1, 1 );	// one dot
+						beginFill( color, (1.0 + seq.voiced(op).frame(f).amp*7) / 8 );
+						drawRect( f, 512 - seq.voiced(op).frame(f).freq * (512.0/7000), 2, 2 );	// one dot
 						//drawRect( 0, 512 - seq.unvoiced(op).frame(f).freq * (512.0/0x3fff), 512, 1 );	// horiz line
 						endFill();
 					}
@@ -76,8 +76,8 @@ public class SequenceView extends Sprite
 			for( f=0; f<512; f++ ) {
 				if( mode == Const.FREQ ) {
 					with( lines.graphics ) {
-						beginFill( color, 1.0 );
-						drawRect( f, 512 - seq.unvoiced(op).frame(f).freq * (512.0/0x3fff), 1, 1 );	// one dot
+						beginFill( color, (1.0 + seq.unvoiced(op).frame(f).amp*7) / 8 );
+						drawRect( f, 512 - seq.unvoiced(op).frame(f).freq * (512.0/7000), 2, 2 );	// one dot
 						//drawRect( 0, 512 - seq.unvoiced(op).frame(f).freq * (512.0/0x3fff), 512, 1 );	// horiz line
 						endFill();
 					}
