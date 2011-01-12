@@ -46,6 +46,7 @@ public class AudioPlayer extends Object
 	private var _setFrameIds :Vector.<int>;
 	
 	private var _seq :FormantSequence;
+	public var speedAdjust :Number = 1;
 	private var _frame :int = 0;
 	private var _samplesInFrame :Number = 0;	// Force a new frame to become active
 	private var _pitchPhase :Number = 0;	// One cycle is range: 0..2*Math.PI
@@ -118,8 +119,8 @@ public class AudioPlayer extends Object
 			
 			// Determine when to advance to the next frame
 			_samplesInFrame++;
-			if( _samplesInFrame > _seq.samplesPerFrame ) {
-				_samplesInFrame -= _seq.samplesPerFrame;
+			if( _samplesInFrame > _seq.samplesPerFrame/speedAdjust ) {
+				_samplesInFrame -= _seq.samplesPerFrame/speedAdjust;
 
 				_frame = (_frame+1) % Const.FRAMES;	// Advance to next frame
 				_setFrameIds[i] = _frame;
