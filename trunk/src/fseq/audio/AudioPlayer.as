@@ -155,7 +155,7 @@ public class AudioPlayer extends Object
 		// Now we can create the final audio
 		for( i=0; i<Const.BUFFER_SIZE; i++ ) {
 			// Volume adjust
-			var out:Number = _buffer[i] / 16;
+			var out:Number = _buffer[i] / 4;
 
 			e.data.writeFloat( out );	// left channel
 			e.data.writeFloat( out );	// right channel

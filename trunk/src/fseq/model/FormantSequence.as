@@ -81,7 +81,7 @@ public class FormantSequence extends Object
 	//--------------------------------------
 	public function get samplesPerFrame() :Number {
 		// TODO: Needs a real value based on speed adjustment
-		return Const.SAMPLE_RATE / 4;
+		return Const.SAMPLE_RATE / 100;
 	}
 	
 	//--------------------------------------

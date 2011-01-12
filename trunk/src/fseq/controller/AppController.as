@@ -70,6 +70,7 @@ public class AppController extends Sprite
 		_loader.addEventListener( CustomEvent.LOAD_COMPLETE, loadComplete, false, 0, true );
 		_loader.addEventListener( CustomEvent.LOAD_FAILED, loadFailed, false, 0, true );
 		_loader.initWithURL("p01 - ShoobyDo.syx");
+		//_loader.initWithURL("freqtest.syx");
 		
 		addEventListener( Event.ENTER_FRAME, initEnterFrame );
 	}

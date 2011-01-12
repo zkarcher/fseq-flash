@@ -127,16 +127,23 @@ public class SyxLoader extends BaseLoader
 			
 			// voiced freqs: high bytes first
 			var i:int = 0;
+			var hi1:uint, lo1:uint;
 			for( i=0; i<8; i++ ) { 
-				voicedFreq[i][f] = ba.readUnsignedByte() << 7;	// 00-7F
+				var hibyte:uint = ba.readUnsignedByte();
+				if( i==0 ) hi1 = hibyte;
+				voicedFreq[i][f] = hibyte << 7;	// 00-7F
 			}
 			// voiced freqs: low bytes
 			for( i=0; i<8; i++ ) {
-				voicedFreq[i][f] |= ba.readUnsignedByte();	// 00-7F
+				var lobyte:uint = ba.readUnsignedByte();
+				if( i==0 ) lo1 = lobyte;
+				voicedFreq[i][f] |= lobyte;	// 00-7F
 			}
 			
 			// Lowest value is apparently 8933 (0x22e5), hmmm....
 			//trace("ShoobyDo lowest voiced freq:", voicedFreq[0][f].toString(16));
+			
+			trace("hi&lo:", hi1.toString(16), lo1.toString(16), "... V1 freq:", voicedFreq[0][f], "==", voicedFreq[0][f].toString(16));
 			
 			// voiced level
 			for( i=0; i<8; i++ ) {
