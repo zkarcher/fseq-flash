@@ -64,6 +64,18 @@ public class AppController extends Sprite
 		addChild( _presets );
 		presetChangeHandler();	// immediately load a sequence
 		
+		_speed = new Slider();
+		_speed.minimum = 0;
+		_speed.maximum = 4;
+		_speed.value = 2;
+		_speed.snapInterval = 0.05;
+		_speed.liveDragging = true;
+		_speed.setSize( 200, 40 );
+		_speed.addEventListener( Event.CHANGE, speedChangeHandler, false, 0, true );
+		_speed.x = 530;
+		_speed.y = 60;
+		addChild( _speed );
+		
 		_sweep = new Shape();
 		with( _sweep.graphics ) {
 			beginFill( 0xffff00, 0.8 );
@@ -80,10 +92,13 @@ public class AppController extends Sprite
 	private var _seq :FormantSequence;
 	private var _player :AudioPlayer;
 	private var _loader :SyxLoader;
-	private var _presets :ComboBox;
 	private var _seqView :SequenceView;
 	private var _sweep :Shape;
-	
+
+	// Form controls
+	private var _presets :ComboBox;
+	private var _speed :Slider;
+
 	//--------------------------------------
 	//  GETTER/SETTERS
 	//--------------------------------------
@@ -98,10 +113,17 @@ public class AppController extends Sprite
 	private function sequenceClickHandler( e:MouseEvent ) :void {
 		if( !_player ) {
 			_player = new AudioPlayer();
+			speedChangeHandler();
 			_player.play( _seq );
 		} else {
 			_player.stop();
 			_player = null;
+		}
+	}
+	
+	private function speedChangeHandler( e:Event=null ) :void {
+		if( _player ) {
+			_player.speedAdjust = Math.pow( 2.0, _speed.value - 2 );
 		}
 	}
 	
