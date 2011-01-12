@@ -47,12 +47,18 @@ public class SequenceView extends Sprite
 		// VOICED
 		for( op=0; op<8; op++ ) {
 			color = Const.color( Const.VOICED, op );
-			lines.graphics.lineStyle( 1, color, 1.0 );
-			lines.graphics.moveTo( 0,0 );
+			//lines.graphics.lineStyle( 1, color, 1.0 );
+			//lines.graphics.moveTo( 0,0 );
 			
 			for( f=0; f<512; f++ ) {
 				if( mode == Const.FREQ ) {
-					lines.graphics.lineTo( f, 512 - seq.voiced(op).frame(f).freq * (512.0/0x3fff) );
+					//lines.graphics.lineTo( f, 512 - seq.voiced(op).frame(f).freq * (512.0/0x3fff) );
+					with( lines.graphics ) {
+						beginFill( color, 1.0 );
+						drawRect( f, 512 - seq.unvoiced(op).frame(f).freq * (512.0/0x3fff), 1, 1 );	// one dot
+						//drawRect( 0, 512 - seq.unvoiced(op).frame(f).freq * (512.0/0x3fff), 512, 1 );	// horiz line
+						endFill();
+					}
 					
 				} else if( mode == Const.AMP ) {
 					trace("TODO");
@@ -64,12 +70,18 @@ public class SequenceView extends Sprite
 		// UNVOICED
 		for( op=0; op<8; op++ ) {
 			color = Const.color( Const.UNVOICED, op );
-			lines.graphics.lineStyle( 1, color, 1.0 );
-			lines.graphics.moveTo( 0,0 );
+			//lines.graphics.lineStyle( 1, color, 1.0 );
+			//lines.graphics.moveTo( 0,0 );
 			
 			for( f=0; f<512; f++ ) {
 				if( mode == Const.FREQ ) {
-					lines.graphics.lineTo( f, 512 - seq.unvoiced(op).frame(f).freq * (512.0/0x3fff) );
+					with( lines.graphics ) {
+						beginFill( color, 1.0 );
+						drawRect( f, 512 - seq.unvoiced(op).frame(f).freq * (512.0/0x3fff), 1, 1 );	// one dot
+						//drawRect( 0, 512 - seq.unvoiced(op).frame(f).freq * (512.0/0x3fff), 512, 1 );	// horiz line
+						endFill();
+					}
+					//lines.graphics.lineTo( f, 512 - seq.unvoiced(op).frame(f).freq * (512.0/0x3fff) );
 					
 				} else if( mode == Const.AMP ) {
 					trace("TODO");

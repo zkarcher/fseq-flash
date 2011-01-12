@@ -20,8 +20,9 @@ public class OperatorFrame extends Object
 		return 0;
 	}
 	public static function syxToFreq( syx:uint ) :Number {
-		// TODO, gah I wish I knew what the formula was
-		return Number( syx );
+		// Reverse-engineered after a little hacking.
+		// The frequencies probably aren't perfect yet.
+		return Math.pow( 2.0, (14.302 - (0.001879 * (0x3fff - syx))) );
 	}
 	
 	public function get syxAmp() :uint {
@@ -30,8 +31,13 @@ public class OperatorFrame extends Object
 	}
 	public static function syxToAmp( syx:uint ) :Number {
 		// 7-bit number. Convert to db.
-		// TODO
-		return syx / Number(0x7f);
+		// How is it measured, 6 db steps for each 50% attenuation? 8.5 steps?
+		// The syx values are inverted: 0 has the greatest amplitude, 0x7f the least.
+		var stepsPer6db :Number = 8.5;	// 90db dynamic range?
+		var inPow:Number = Math.pow( 2.0, Number(0x7f-syx) / stepsPer6db );
+		var maxPow:Number = Math.pow( 2.0, Number(0x7f) / stepsPer6db );
+		return inPow / maxPow;
+		
 	}
 	
 	public function clone() :OperatorFrame {
