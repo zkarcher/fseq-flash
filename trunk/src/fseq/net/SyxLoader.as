@@ -132,6 +132,7 @@ public class SyxLoader extends BaseLoader
 		for( var f:int=0; f<totalFrames; f++ ) {
 			// Read the pitch
 			pitch[setFrame] = (ba.readUnsignedByte() << 7) | ba.readUnsignedByte();	// Two 7-bit bytes, make a 14-bit word
+			//trace("Got pitch:", pitch[setFrame]);
 			
 			// voiced freqs: high bytes first
 			var hi1:uint, lo1:uint;
