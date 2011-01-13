@@ -24,7 +24,7 @@ public class Const extends Object
 	
 	// Editor
 	public static const GRAPH_SCALE_X :Number = 2.0;
-	public static const GRAPH_AMP_HEIGHT :Number = 200;
+	public static const GRAPH_AMP_HEIGHT :Number = 100;
 	public static const GRAPH_FREQ_HEIGHT :Number = 500;
 	
 	public function Const()
