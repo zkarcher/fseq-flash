@@ -22,7 +22,11 @@ public class OperatorFrame extends Object
 	public static function syxToFreq( syx:uint ) :Number {
 		// Reverse-engineered after a little hacking.
 		// The frequencies probably aren't perfect yet.
-		return Math.pow( 2.0, (14.302 - (0.001879 * (0x3fff - syx))) );
+		//return Math.pow( 2.0, (14.302 - (0.001879 * (0x3fff - syx))) );
+		
+		// Inferred from RndArp1, there's a high note that is 1 octave above a lower root note.
+		// Pitches are approx. 13040, 13554. It's probably 512 steps per octave, then?
+		return Math.pow( 2.0, (14.302 - (1.0/(13552-13040) * (0x3fff-syx))) );
 	}
 	
 	public function get syxAmp() :uint {
