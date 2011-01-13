@@ -3,8 +3,6 @@ TODO
 
 * Tween the playback frequency
 * Improve the synthesis -- formants should start as 2 neighboring overtones
-* the display should be a class, and have two subclasses for the draggable regions
 * Fix the unvoiced audio width, it's too noisy right now
 * editing controls
-* "undo" system -- save each edit in memory
 * less audio latency
