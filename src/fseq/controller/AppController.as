@@ -51,6 +51,11 @@ public class AppController extends Sprite
 		super();
 		if( _instance != null ) throw new Error("Error:AppController already initialised.");
 		if( _instance == null ) _instance = this;
+
+		_editorView = new EditorView();
+		_editorView.y = 90;
+		_editorView.addEventListener( MouseEvent.CLICK, sequenceClickHandler );
+		addChildAt( _editorView, 0 );
 		
 		_presets = new ComboBox();
 		for each( var str:String in Presets.fs1rSequences() ) {
@@ -79,21 +84,23 @@ public class AppController extends Sprite
 		_sweep = new Shape();
 		with( _sweep.graphics ) {
 			beginFill( 0xffff00, 0.8 );
-			drawRect( 0, 0, 2, 512 );
+			//drawRect( 0, 0, 2, 512 );
 			endFill();
 		}
 		addChild( _sweep );
 		addEventListener( Event.ENTER_FRAME, enterFrameHandler, false, 0, true );
+		
 	}
 		
 	//--------------------------------------
 	//  PRIVATE VARIABLES
 	//--------------------------------------
-	private var _seq :FormantSequence;
 	private var _player :AudioPlayer;
 	private var _loader :SyxLoader;
-	private var _seqView :SequenceView;
+	//private var _seqView :SequenceView;
 	private var _sweep :Shape;
+
+	private var _editorView :EditorView;
 
 	// Form controls
 	private var _presets :ComboBox;
@@ -114,7 +121,7 @@ public class AppController extends Sprite
 		if( !_player ) {
 			_player = new AudioPlayer();
 			speedChangeHandler();
-			_player.play( _seq );
+			_player.play( _editorView.activeSequence );
 		} else {
 			_player.stop();
 			_player = null;
@@ -128,7 +135,7 @@ public class AppController extends Sprite
 	}
 	
 	private function presetChangeHandler( e:Event=null ) :void {
-		if( _seqView && _seqView.parent ) _seqView.parent.removeChild( _seqView );
+		//if( _seqView && _seqView.parent ) _seqView.parent.removeChild( _seqView );
 		if( _player ) {
 			_player.stop();
 			_player = null;
@@ -149,10 +156,13 @@ public class AppController extends Sprite
 	}
 	
 	private function loadComplete( e:CustomEvent ) :void {
-		_seq = _loader.formantSequence;
+		var seq:FormantSequence = _loader.formantSequence;
+		/*
 		_seqView = new SequenceView( Const.FREQ, _seq );
 		_seqView.addEventListener( MouseEvent.CLICK, sequenceClickHandler, false, 0, true );
 		addChildAt( _seqView, 0 );
+		*/
+		_editorView.pushSequence( seq );
 	}
 	
 	private function enterFrameHandler( e:Event ) :void {
