@@ -136,10 +136,12 @@ public class AppController extends Sprite
 	
 	private function presetChangeHandler( e:Event=null ) :void {
 		//if( _seqView && _seqView.parent ) _seqView.parent.removeChild( _seqView );
+		/*
 		if( _player ) {
 			_player.stop();
 			_player = null;
 		}
+		*/
 		
 		// Flash components are evil. Index is -1 when launched
 		var idx:int = Math.max( 0, _presets.selectedIndex );
@@ -163,6 +165,10 @@ public class AppController extends Sprite
 		addChildAt( _seqView, 0 );
 		*/
 		_editorView.pushSequence( seq );
+		
+		if( _player ) {
+			_player.play( _editorView.activeSequence );
+		}
 	}
 	
 	private function enterFrameHandler( e:Event ) :void {
