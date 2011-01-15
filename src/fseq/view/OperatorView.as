@@ -42,7 +42,7 @@ public class OperatorView extends Sprite
 		switch( _type ) {
 			case Const.VOICED:
 				// Voiced operators are represented as a chain of circles, with dots at their centers
-				_dotData = new BitmapData( 1, 1, false, 0xffffff );
+				_dotData = new BitmapData( 1, 1, false, Const.color( Const.VOICED_DOT ) );
 				
 				_circData = new Vector.<BitmapData>();
 				for( i=0; i<MAX_CIRC_RADIUS-2; i++ ) {
@@ -50,7 +50,7 @@ public class OperatorView extends Sprite
 					var shp:Shape = new Shape();
 					with( shp.graphics ) {
 						beginFill( color, 1.0 );
-						drawCircle( MAX_CIRC_RADIUS-0.5, MAX_CIRC_RADIUS-0.5, i+1 );
+						drawCircle( MAX_CIRC_RADIUS-0.5, MAX_CIRC_RADIUS-0.5, i+1.5 );
 						endFill();
 					}
 					bData.draw( shp );
@@ -100,10 +100,28 @@ public class OperatorView extends Sprite
 	//--------------------------------------
 	//  GETTER/SETTERS
 	//--------------------------------------
+	public function set hilite( b:Boolean ) :void {
+		if( b ) {
+			this.transform.colorTransform = new ColorTransform( 0.5,0.5,0.5,1, 0x7f,0x7f,0x7f,0 );
+		} else {
+			this.transform.colorTransform = new ColorTransform();
+		}
+	}
 	
 	//--------------------------------------
 	//  PUBLIC METHODS
 	//--------------------------------------
+	public function yAtFrame( fseq:FormantSequence, f:int ) :Number {
+		var operator:Operator;
+		if( _type == Const.VOICED ) {
+			operator = fseq.voiced(_id);
+		} else if( _type == Const.UNVOICED ) {
+			operator = fseq.unvoiced(_id);
+		}
+		
+		return _rect.height * (1 - operator.frame(f).freq * (1/7000.0));
+	}
+	
 	public function redraw( fseq:FormantSequence ) :void {
 		var f:int;
 		var atY:Number;
@@ -114,7 +132,7 @@ public class OperatorView extends Sprite
 				operator = fseq.voiced(_id);
 
 				for( f=0; f<Const.FRAMES; f++ ) {
-					atY = _rect.height * (1 - operator.frame(f).freq * (1/7000.0));
+					atY = yAtFrame(fseq, f);
 
 					_dots[f].y = atY;
 					_circs[f].y = atY - (MAX_CIRC_RADIUS-1);
@@ -140,11 +158,11 @@ public class OperatorView extends Sprite
 				_shape = new Shape();
 				_shape.graphics.beginBitmapFill( _patternData, null, true );
 				for( f=0; f<Const.FRAMES; f++ ) {
-					atY = _rect.height * (1 - operator.frame(f).freq * (1/7000.0));
+					atY = yAtFrame(fseq, f);
 					_shape.graphics.lineTo( f*Const.GRAPH_SCALE_X, atY - operator.frame(f).amp * MAX_CIRC_RADIUS );
 				}
 				for( f=Const.FRAMES-1; f>=0; f-- ) {
-					atY = _rect.height * (1 - operator.frame(f).freq * (1/7000.0));
+					atY = yAtFrame(fseq, f);
 					_shape.graphics.lineTo( f*Const.GRAPH_SCALE_X, atY + operator.frame(f).amp * MAX_CIRC_RADIUS );
 				}
 				_shape.graphics.endFill();

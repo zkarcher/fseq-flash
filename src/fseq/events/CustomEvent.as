@@ -8,6 +8,13 @@ public class CustomEvent extends Event
 	public static const LOAD_COMPLETE :String = "LOAD_COMPLETE";
 	public static const LOAD_FAILED :String = "LOAD_FAILED";
 	
+	// Audio playback
+	public static const PLAYING_FRAME :String = "PLAYING_FRAME";
+	
+	// Editing
+	public static const EDIT_START :String = "EDIT_START";
+	public static const EDIT_STOP :String = "EDIT_STOP";
+	
 	public function CustomEvent(type:String, inData:Object=null, bubbles:Boolean=true, cancelable:Boolean=false)
 	{
 		super(type, bubbles, cancelable);

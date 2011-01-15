@@ -33,12 +33,19 @@ public class EditorView extends Sprite
 	public function EditorView() {
 		_history = new EditorHistory();
 		
+		/*
 		_ampView = new GraphView( Const.AMP );
 		addChild( _ampView );
+		*/
 		
 		_freqView = new GraphView( Const.FREQ );
 		_freqView.y = Const.GRAPH_AMP_HEIGHT + 20;
 		addChild( _freqView );
+		
+		with( _freqView ) {
+			addEventListener( CustomEvent.EDIT_START, editStart );
+			addEventListener( CustomEvent.EDIT_STOP, editStop );
+		}
 	}
 	
 	//--------------------------------------
@@ -46,7 +53,7 @@ public class EditorView extends Sprite
 	//--------------------------------------
 	private var _history :EditorHistory;
 
-	private var _ampView :GraphView;
+	//private var _ampView :GraphView;
 	private var _freqView :GraphView;
 	
 	//--------------------------------------
@@ -64,16 +71,30 @@ public class EditorView extends Sprite
 		redrawGraphs();
 	}
 	
+	public function scanGlow( col:int ) :void {
+		_freqView.scanGlow( col );
+	}
+	
 	//--------------------------------------
 	//  EVENT HANDLERS
 	//--------------------------------------
+	private function editStart( e:CustomEvent ) :void {
+		_history.editStart();
+		redrawGraphs();
+	}
+	
+	private function editStop( e:CustomEvent ) :void {
+		_history.editStop();
+		redrawGraphs();
+	}
 	
 	//--------------------------------------
 	//  PRIVATE & PROTECTED INSTANCE METHODS
 	//--------------------------------------
 	private function redrawGraphs() :void {
-		_ampView.redraw( activeSequence );
-		_freqView.redraw( activeSequence );
+		//_ampView.redraw( activeSequence );
+		_freqView.fseq = activeSequence;
+		_freqView.redraw();
 	}
 }
 

@@ -121,9 +121,11 @@ public class AppController extends Sprite
 		if( !_player ) {
 			_player = new AudioPlayer();
 			speedChangeHandler();
+			_player.addEventListener( CustomEvent.PLAYING_FRAME, playingFrame );
 			_player.play( _editorView.activeSequence );
 		} else {
 			_player.stop();
+			_player.removeEventListener( CustomEvent.PLAYING_FRAME, playingFrame );
 			_player = null;
 		}
 	}
@@ -178,6 +180,10 @@ public class AppController extends Sprite
 			_sweep.visible = true;
 			_sweep.x = _player.frame;
 		}
+	}
+	
+	private function playingFrame( e:CustomEvent ) :void {
+		_editorView.scanGlow( e.data['frame'] );
 	}
 	
 	//--------------------------------------
