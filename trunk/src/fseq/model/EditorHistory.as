@@ -67,12 +67,12 @@ public class EditorHistory extends Object
 		_activeIndex = _history.length - 1;
 	}
 	
-	public function startEdit() :void {
+	public function editStart() :void {
 		popLaterEdits();
 		_edit = _history[_activeIndex].clone();
 	}
 	
-	public function stopEdit() :void {
+	public function editStop() :void {
 		_history.push( _edit );
 		_activeIndex = _history.length-1;
 		_edit = null;

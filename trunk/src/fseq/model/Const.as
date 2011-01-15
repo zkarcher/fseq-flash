@@ -1,6 +1,8 @@
 package fseq.model
 {
 
+import com.zacharcher.color.*;
+
 public class Const extends Object
 {
 	// Audio settings
@@ -26,6 +28,7 @@ public class Const extends Object
 	public static const GRAPH_SCALE_X :Number = 2.0;
 	public static const GRAPH_AMP_HEIGHT :Number = 100;
 	public static const GRAPH_FREQ_HEIGHT :Number = 500;
+	public static const VOICED_DOT :String = "VOICED_DOT";
 	
 	public function Const()
 	{
@@ -39,6 +42,14 @@ public class Const extends Object
 			
 			case Const.VOICED:
 				return [0xff4801,0xfe1d16,0xfe1f72,0xfd2096,0xf626ff,0xc749ff,0x9350ff,0x6b78ff][id];
+				
+			case Const.VOICED_DOT:
+				var blend:uint = color( Const.VOICED, id );
+				var rgb:Object = ColorUtil.rgb( blend );
+				rgb.r = (rgb.r + 0xff) / 2;
+				rgb.g = (rgb.g + 0xff) / 2;
+				rgb.b = (rgb.b + 0xff) / 2;
+				return (rgb.r << 16) | (rgb.g << 8) | rgb.b;
 				
 			case Const.UNVOICED:
 				return [0x00feed,0x00f6c0,0x00ec86,0x00db40,0x08c827,0x1cb827,0x459b34,0x787a52][id];

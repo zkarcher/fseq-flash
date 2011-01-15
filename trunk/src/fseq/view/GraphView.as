@@ -63,6 +63,8 @@ public class GraphView extends Sprite
 		addEventListener( MouseEvent.MOUSE_DOWN, mouseDownHandler );
 		stage.addEventListener( MouseEvent.MOUSE_MOVE, mouseMoveHandler );
 		stage.addEventListener( MouseEvent.MOUSE_UP, mouseUpHandler );
+		addEventListener( MouseEvent.MOUSE_OVER, mouseOverHandler );
+		addEventListener( MouseEvent.MOUSE_OUT, mouseOutHandler );
 	}
 	
 	//--------------------------------------
@@ -73,6 +75,8 @@ public class GraphView extends Sprite
 	private var _bg :Bitmap;
 	private var _opViews :Vector.<OperatorView>;
 	
+	private var _fseq :FormantSequence;
+	private var _isMouseOver :Boolean;
 	private var _isMouseDown :Boolean;
 	
 	//--------------------------------------
@@ -82,33 +86,103 @@ public class GraphView extends Sprite
 	private function get isFreq() :Boolean { return _type == Const.FREQ; }
 	private function get isAmp() :Boolean { return _type == Const.AMP; }
 	
+	public function set fseq( inFseq:FormantSequence ) :void { _fseq = inFseq; }
+	
 	//--------------------------------------
 	//  PUBLIC METHODS
 	//--------------------------------------
-	public function redraw( fseq:FormantSequence ) :void {
+	public function redraw() :void {
 		for each( var opView:OperatorView in _opViews ) {
-			opView.redraw( fseq );
+			opView.redraw( _fseq );
 		}
+	}
+	
+	// As the audio plays, display a glowing vertical bar
+	public function scanGlow( col:int ) :void {
+		var shp:Shape = new Shape();
+		with( shp.graphics ) {
+			beginFill( 0xffffff, 0.5 );
+			drawRect( col*Const.GRAPH_SCALE_X, 0, Const.GRAPH_SCALE_X, _rect.height );
+			endFill();
+		}
+		addChild( shp );
+		Tweener.addTween( shp, {alpha:0, time:0.2, transition:"linear", onComplete:removeDisp, onCompleteParams:[shp]});
 	}
 	
 	//--------------------------------------
 	//  EVENT HANDLERS
 	//--------------------------------------
 	private function mouseDownHandler( e:MouseEvent ) :void {
-		
+		_isMouseDown = true;
+		dispatchEvent( new CustomEvent( CustomEvent.EDIT_START, {type:EditType.FREEHAND_DRAW}) );
 	}
 	
 	private function mouseMoveHandler( e:MouseEvent ) :void {
-		
+		if( _isMouseDown ) {
+			
+		} else if( _isMouseOver ) {
+			var closestOp:OperatorView = closestOpToMouse();
+			hiliteOps( [closestOp] );
+		}
 	}
 	
 	private function mouseUpHandler( e:MouseEvent ) :void {
-		
+		if( _isMouseDown ) {
+			dispatchEvent( new CustomEvent( CustomEvent.EDIT_STOP ) );
+		}
+		_isMouseDown = false;
 	}
+	
+	private function mouseOverHandler( e:MouseEvent ) :void {
+		_isMouseOver = true;
+	}
+	
+	private function mouseOutHandler( e:MouseEvent ) :void {
+		_isMouseOver = false;
+		
+		if( _isMouseDown ) {
+			
+		} else {
+			hiliteOps( null );	// cancel all hilites
+		}
+	}
+	
 	//--------------------------------------
 	//  PRIVATE & PROTECTED INSTANCE METHODS
 	//--------------------------------------
+	private function closestOpToMouse() :OperatorView {
+		var frame:int = mouseX / Const.GRAPH_SCALE_X;
+
+		var bestOp:OperatorView = null;
+		var bestDistance:Number = 999999;
+		for each( var opView:OperatorView in _opViews ) {
+			var thisDistance:Number = Math.abs(mouseY - opView.yAtFrame(_fseq, frame));
+			if( thisDistance < bestDistance ) {
+				bestDistance = thisDistance;
+				bestOp = opView;
+			}
+		}
+		
+		return bestOp;
+	}
 	
+	private function hiliteOps( liteOps:Array ) :void {
+		var opView:OperatorView;
+		for each( opView in _opViews ) {
+			opView.hilite = false;
+		}
+
+		if( liteOps ) {
+			for each( opView in liteOps ) {
+				opView.hilite = true;
+			}
+		}
+	}
+	
+	// Tweener callback
+	private function removeDisp( disp:DisplayObject ) :void {
+		if( disp.parent ) disp.parent.removeChild( disp );
+	}
 }
 
 }

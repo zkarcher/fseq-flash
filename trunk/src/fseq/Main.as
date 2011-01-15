@@ -14,7 +14,7 @@ import flash.display.*;
 import flash.events.*;
 import flash.geom.*;
 import caurina.transitions.Tweener;
-//import caurina.transitions.properties.ColorShortcuts;
+import caurina.transitions.properties.ColorShortcuts;
 import com.zacharcher.color.*;
 import com.zacharcher.math.*;
 import fseq.controller.*;
@@ -35,7 +35,7 @@ public class Main extends Sprite
 		stage.scaleMode = StageScaleMode.NO_SCALE;
 		
 		// Tweener
-		//ColorShortcuts.init();
+		ColorShortcuts.init();
 		
 		addChild( AppController.instance );
 		

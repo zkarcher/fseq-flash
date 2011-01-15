@@ -18,9 +18,10 @@ import caurina.transitions.Tweener;
 import com.zacharcher.color.*;
 import com.zacharcher.math.*;
 import fseq.audio.*;
+import fseq.events.*;
 import fseq.model.*;
 
-public class AudioPlayer extends Object
+public class AudioPlayer extends EventDispatcher
 {
 	//--------------------------------------
 	// CLASS CONSTANTS
@@ -123,6 +124,7 @@ public class AudioPlayer extends Object
 				_samplesInFrame -= _seq.samplesPerFrame/speedAdjust;
 
 				_frame = (_frame+1) % Const.FRAMES;	// Advance to next frame
+				dispatchEvent( new CustomEvent( CustomEvent.PLAYING_FRAME, {frame:_frame}));
 				_setFrameIds[i] = _frame;
 				
 				_pitchInc = _seq.pitch().frame(_frame).freq * ((2*Math.PI) / Const.SAMPLE_RATE);
