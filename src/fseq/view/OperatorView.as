@@ -86,20 +86,31 @@ public class OperatorView extends Sprite
 	private var _type :String;	// VOICED or UNVOICED, or maybe PITCH
 	private var _id :int;
 	private var _rect :Rectangle;
+	private var _isEditable :Boolean;
 	
-	// Voiced:
+	// DRAWING: Voiced:
 	private var _circData :Vector.<BitmapData>;
 	private var _circs :Vector.<Bitmap>;
 	private var _dotData :BitmapData;
 	private var _dots :Vector.<Bitmap>;
 	
-	// Unvoiced
+	// DRAWING: Unvoiced
 	private var _patternData :BitmapData;
 	private var _shape :Shape;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
 	//--------------------------------------
+	public function get type() :String { return _type; }
+	public function get id() :int { return _id; }
+	
+	public function get isEditable() :Boolean { return _isEditable; }
+	public function set isEditable( b:Boolean ) :void {
+		_isEditable = b;
+		alpha = b ? 1.0 : 0.4;
+	}
+	
+	// Hilite when the mouse hovers near this OperatorView, for example
 	public function set hilite( b:Boolean ) :void {
 		if( b ) {
 			this.transform.colorTransform = new ColorTransform( 0.5,0.5,0.5,1, 0x7f,0x7f,0x7f,0 );
@@ -111,14 +122,16 @@ public class OperatorView extends Sprite
 	//--------------------------------------
 	//  PUBLIC METHODS
 	//--------------------------------------
-	public function yAtFrame( fseq:FormantSequence, f:int ) :Number {
-		var operator:Operator;
-		if( _type == Const.VOICED ) {
-			operator = fseq.voiced(_id);
-		} else if( _type == Const.UNVOICED ) {
-			operator = fseq.unvoiced(_id);
+	public function operatorInSequence( fseq:FormantSequence ) :Operator {
+		switch( _type ) {
+			case Const.VOICED:	return fseq.voiced(_id);
+			case Const.UNVOICED: return fseq.unvoiced(_id);
 		}
-		
+		return null;
+	}
+	
+	public function yAtFrame( fseq:FormantSequence, f:int ) :Number {
+		var operator:Operator = operatorInSequence( fseq );
 		return _rect.height * (1 - operator.frame(f).freq * (1/7000.0));
 	}
 	

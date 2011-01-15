@@ -60,6 +60,8 @@ public class GraphView extends Sprite
 		if( !stage ) return;
 		removeEventListener( Event.ENTER_FRAME, initEnterFrame );
 		
+		mouseChildren = false;
+		
 		addEventListener( MouseEvent.MOUSE_DOWN, mouseDownHandler );
 		stage.addEventListener( MouseEvent.MOUSE_MOVE, mouseMoveHandler );
 		stage.addEventListener( MouseEvent.MOUSE_UP, mouseUpHandler );
@@ -78,6 +80,11 @@ public class GraphView extends Sprite
 	private var _fseq :FormantSequence;
 	private var _isMouseOver :Boolean;
 	private var _isMouseDown :Boolean;
+	
+	private var _hiliteOpViews :Array;
+	private var _editOps :Array;
+	private var _editType :String;
+	private var _lastMouseLoc :Point;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -109,17 +116,42 @@ public class GraphView extends Sprite
 		Tweener.addTween( shp, {alpha:0, time:0.2, transition:"linear", onComplete:removeDisp, onCompleteParams:[shp]});
 	}
 	
+	// Set with arrays of Booleans
+	public function setEditableOps( pitch:Boolean, voiced:Array, unvoiced:Array ) :void {
+		for each( var opView:OperatorView in _opViews ) {
+			switch( opView.type ) {
+				case Const.VOICED:		opView.isEditable = voiced[opView.id]; break;
+				case Const.UNVOICED:	opView.isEditable = unvoiced[opView.id]; break;
+			}
+		}
+	}
+	
+	public function yToFreq( inY:Number ) :Number {
+		return (1 - (inY / _rect.height)) * 7000.0;
+	}
+	
 	//--------------------------------------
 	//  EVENT HANDLERS
 	//--------------------------------------
 	private function mouseDownHandler( e:MouseEvent ) :void {
-		_isMouseDown = true;
+		// Dispatch the event FIRST so the editor clones the Fseq
 		dispatchEvent( new CustomEvent( CustomEvent.EDIT_START, {type:EditType.FREEHAND_DRAW}) );
+
+		_isMouseDown = true;
+		
+		_editOps = [];
+		for each( var opView:OperatorView in _hiliteOpViews ) {
+			_editOps.push( opView.operatorInSequence(_fseq) );
+		}
+		
+		_lastMouseLoc = new Point( mouseX, mouseY );
+		_editType = EditType.FREEHAND_DRAW;
+		performEditStep();
 	}
 	
 	private function mouseMoveHandler( e:MouseEvent ) :void {
 		if( _isMouseDown ) {
-			
+			performEditStep();
 		} else if( _isMouseOver ) {
 			var closestOp:OperatorView = closestOpToMouse();
 			hiliteOps( [closestOp] );
@@ -156,6 +188,7 @@ public class GraphView extends Sprite
 		var bestOp:OperatorView = null;
 		var bestDistance:Number = 999999;
 		for each( var opView:OperatorView in _opViews ) {
+			if( !opView.isEditable ) continue;
 			var thisDistance:Number = Math.abs(mouseY - opView.yAtFrame(_fseq, frame));
 			if( thisDistance < bestDistance ) {
 				bestDistance = thisDistance;
@@ -166,17 +199,49 @@ public class GraphView extends Sprite
 		return bestOp;
 	}
 	
-	private function hiliteOps( liteOps:Array ) :void {
+	private function hiliteOps( liteOpViews:Array ) :void {
 		var opView:OperatorView;
 		for each( opView in _opViews ) {
 			opView.hilite = false;
 		}
 
-		if( liteOps ) {
-			for each( opView in liteOps ) {
+		if( liteOpViews ) {
+			for each( opView in liteOpViews ) {
 				opView.hilite = true;
 			}
 		}
+		_hiliteOpViews = liteOpViews || [];
+	}
+	
+	private function performEditStep() :void {
+		var f:int, i:int;
+		var op:Operator;
+		var opView:OperatorView;
+		
+		var lastMouseFrame:int = _lastMouseLoc.x / Const.GRAPH_SCALE_X;
+		var mouseFrame:int = mouseX / Const.GRAPH_SCALE_X;
+		var leftFrame:int = Math.min( lastMouseFrame, mouseFrame );
+		var rightFrame:int = Math.max( lastMouseFrame, mouseFrame );
+		
+		switch( _editType ) {
+			case EditType.FREEHAND_DRAW:
+				for each( op in _editOps ) {
+					if( leftFrame == rightFrame ) {
+						op.frame(leftFrame).freq = yToFreq( mouseY );
+					} else {
+						for( f=leftFrame; f<=rightFrame; f++ ) {
+							var leftFreq:Number = yToFreq( (leftFrame==lastMouseFrame) ? _lastMouseLoc.y : mouseY );
+							var rightFreq:Number = yToFreq( (rightFrame==lastMouseFrame) ? _lastMouseLoc.y : mouseY );
+							op.frame(f).freq = Num.interpolate( leftFreq, rightFreq, Number(f-leftFrame)/(rightFrame-leftFrame) );
+						}
+					}
+				}
+				break;
+		}
+		
+		_lastMouseLoc = new Point( mouseX, mouseY );
+		
+		redraw();
 	}
 	
 	// Tweener callback

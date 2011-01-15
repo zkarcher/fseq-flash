@@ -46,6 +46,10 @@ public class EditorView extends Sprite
 			addEventListener( CustomEvent.EDIT_START, editStart );
 			addEventListener( CustomEvent.EDIT_STOP, editStop );
 		}
+		
+		var t:Boolean = true;
+		var f:Boolean = false;
+		setEditableOps( f, [t,t,t,t, t,t,t,t], [f,f,f,f, f,f,f,f] );
 	}
 	
 	//--------------------------------------
@@ -91,6 +95,12 @@ public class EditorView extends Sprite
 	//--------------------------------------
 	//  PRIVATE & PROTECTED INSTANCE METHODS
 	//--------------------------------------
+	
+	// Set with arrays of Booleans
+	private function setEditableOps( pitch:Boolean, voiced:Array, unvoiced:Array ) :void {
+		_freqView.setEditableOps( pitch, voiced, unvoiced );
+	}
+	
 	private function redrawGraphs() :void {
 		//_ampView.redraw( activeSequence );
 		_freqView.fseq = activeSequence;
