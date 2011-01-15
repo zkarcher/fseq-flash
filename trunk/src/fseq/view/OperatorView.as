@@ -35,23 +35,22 @@ public class OperatorView extends Sprite
 		_type = type;
 		_id = id;
 		_rect = rect;
-		
+
+		var color:uint = Const.color( _type, _id );		
 		var i:int;
 		
 		switch( _type ) {
 			case Const.VOICED:
-			case Const.UNVOICED:	// <-- TODO: this is temporary
 				// Voiced operators are represented as a chain of circles, with dots at their centers
 				_dotData = new BitmapData( 1, 1, false, 0xffffff );
 				
 				_circData = new Vector.<BitmapData>();
-				var color:uint = Const.color( _type, _id );
 				for( i=0; i<MAX_CIRC_RADIUS-2; i++ ) {
 					var bData:BitmapData = new BitmapData( MAX_CIRC_RADIUS*2-1, MAX_CIRC_RADIUS*2-1, true, 0x0 );
 					var shp:Shape = new Shape();
 					with( shp.graphics ) {
 						beginFill( color, 1.0 );
-						drawCircle( MAX_CIRC_RADIUS-1, MAX_CIRC_RADIUS-1, i+2 );
+						drawCircle( MAX_CIRC_RADIUS-0.5, MAX_CIRC_RADIUS-0.5, i+1 );
 						endFill();
 					}
 					bData.draw( shp );
@@ -69,11 +68,15 @@ public class OperatorView extends Sprite
 					_dots[i].x = i*Const.GRAPH_SCALE_X;
 					addChild( _dots[i] );	// all black dots are placed on top of the circles
 				}
-				/*
-			case Const.UNVOICED:
-				_bData = new BitmapData( 1, 1, false, Const.color(_type,_id) );
 				break;
-				*/
+
+			case Const.UNVOICED:
+				_patternData = new BitmapData( 8, 1, true, 0x0 );
+				for( var p:int=0; p<8; p++ ) {
+					var color32:uint = color | (int(p*(255/8)) << 24);
+					_patternData.setPixel32( p, 0, color32 );
+				}
+				break;
 		}
 	}
 	
@@ -90,6 +93,10 @@ public class OperatorView extends Sprite
 	private var _dotData :BitmapData;
 	private var _dots :Vector.<Bitmap>;
 	
+	// Unvoiced
+	private var _patternData :BitmapData;
+	private var _shape :Shape;
+	
 	//--------------------------------------
 	//  GETTER/SETTERS
 	//--------------------------------------
@@ -98,31 +105,54 @@ public class OperatorView extends Sprite
 	//  PUBLIC METHODS
 	//--------------------------------------
 	public function redraw( fseq:FormantSequence ) :void {
+		var f:int;
+		var atY:Number;
 		var operator:Operator;
+		
 		switch( _type ) {
-			case Const.VOICED:		operator = fseq.voiced(_id); break;
-			case Const.UNVOICED:	operator = fseq.unvoiced(_id); break;
-		}
-		
-		if( _type == Const.UNVOICED ) return;
-		
-		for( var f:int=0; f<Const.FRAMES; f++ ) {
-			var atY:Number = _rect.height * (1 - operator.frame(f).freq * (1/7000.0));
+			case Const.VOICED:
+				operator = fseq.voiced(_id);
+
+				for( f=0; f<Const.FRAMES; f++ ) {
+					atY = _rect.height * (1 - operator.frame(f).freq * (1/7000.0));
+
+					_dots[f].y = atY;
+					_circs[f].y = atY - (MAX_CIRC_RADIUS-1);
+
+					// Change the circle size, if necessary.
+					// Louder frames have larger circles.
+					var amp:Number = operator.frame(f).amp;
+					var ampCompare :Number = 0.5;
+					var circId:int = _circData.length-1;
+					while( circId > 0 && amp < ampCompare ) {
+						ampCompare *= 0.5;
+						circId--;
+					}
+					_circs[f].bitmapData = _circData[circId];
+				}
+				break;
+				
+			case Const.UNVOICED:
+				operator = fseq.unvoiced(_id);
+
+				if( _shape && _shape.parent ) _shape.parent.removeChild( _shape );
+				
+				_shape = new Shape();
+				_shape.graphics.beginBitmapFill( _patternData, null, true );
+				for( f=0; f<Const.FRAMES; f++ ) {
+					atY = _rect.height * (1 - operator.frame(f).freq * (1/7000.0));
+					_shape.graphics.lineTo( f*Const.GRAPH_SCALE_X, atY - operator.frame(f).amp * MAX_CIRC_RADIUS );
+				}
+				for( f=Const.FRAMES-1; f>=0; f-- ) {
+					atY = _rect.height * (1 - operator.frame(f).freq * (1/7000.0));
+					_shape.graphics.lineTo( f*Const.GRAPH_SCALE_X, atY + operator.frame(f).amp * MAX_CIRC_RADIUS );
+				}
+				_shape.graphics.endFill();
+				addChild( _shape );
+				break;
 			
-			_dots[f].y = atY;
-			_circs[f].y = atY - (MAX_CIRC_RADIUS-1);
-			
-			// Change the circle size, if necessary.
-			// Louder frames have larger circles.
-			var amp:Number = operator.frame(f).amp;
-			var ampCompare :Number = 0.5;
-			var circId:int = _circData.length-1;
-			while( circId > 0 && amp < ampCompare ) {
-				ampCompare *= 0.5;
-				circId--;
-			}
-			_circs[f].bitmapData = _circData[circId];
 		}
+
 	}
 	
 	//--------------------------------------
