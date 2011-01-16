@@ -72,7 +72,8 @@ public class EditorView extends Sprite
 	//--------------------------------------
 	public function pushSequence( fseq:FormantSequence ) :void {
 		_history.pushSequence( fseq );
-		redrawGraphs();
+		_freqView.fseq = activeSequence;
+		redrawAllGraphs();
 	}
 	
 	public function scanGlow( col:int ) :void {
@@ -84,12 +85,11 @@ public class EditorView extends Sprite
 	//--------------------------------------
 	private function editStart( e:CustomEvent ) :void {
 		_history.editStart();
-		redrawGraphs();
+		_freqView.fseq = activeSequence;	// any changes will apply to this new FormantSequence
 	}
 	
 	private function editStop( e:CustomEvent ) :void {
 		_history.editStop();
-		redrawGraphs();
 	}
 	
 	//--------------------------------------
@@ -101,10 +101,9 @@ public class EditorView extends Sprite
 		_freqView.setEditableOps( pitch, voiced, unvoiced );
 	}
 	
-	private function redrawGraphs() :void {
+	private function redrawAllGraphs() :void {
 		//_ampView.redraw( activeSequence );
-		_freqView.fseq = activeSequence;
-		_freqView.redraw();
+		_freqView.redrawAll();
 	}
 }
 

@@ -54,7 +54,7 @@ public class AppController extends Sprite
 
 		_editorView = new EditorView();
 		_editorView.y = 90;
-		_editorView.addEventListener( MouseEvent.CLICK, sequenceClickHandler );
+		//_editorView.addEventListener( MouseEvent.CLICK, sequenceClickHandler );
 		addChildAt( _editorView, 0 );
 		
 		_presets = new ComboBox();
@@ -90,6 +90,14 @@ public class AppController extends Sprite
 		addChild( _sweep );
 		addEventListener( Event.ENTER_FRAME, enterFrameHandler, false, 0, true );
 		
+		addEventListener( Event.ENTER_FRAME, initEnterFrame );
+	}
+	
+	private function initEnterFrame( e:Event ) :void {
+		if( !stage ) return;
+		removeEventListener( Event.ENTER_FRAME, initEnterFrame );
+		
+		stage.addEventListener( KeyboardEvent.KEY_UP, keyUpHandler );
 	}
 		
 	//--------------------------------------
@@ -117,16 +125,21 @@ public class AppController extends Sprite
 	//--------------------------------------
 	//  EVENT HANDLERS
 	//--------------------------------------
-	private function sequenceClickHandler( e:MouseEvent ) :void {
-		if( !_player ) {
-			_player = new AudioPlayer();
-			speedChangeHandler();
-			_player.addEventListener( CustomEvent.PLAYING_FRAME, playingFrame );
-			_player.play( _editorView.activeSequence );
-		} else {
-			_player.stop();
-			_player.removeEventListener( CustomEvent.PLAYING_FRAME, playingFrame );
-			_player = null;
+	private function keyUpHandler( e:KeyboardEvent ) :void {
+		switch( e.charCode ) {
+			// Space taggles the audio
+			case ' '.charCodeAt(0):
+				if( !_player ) {
+					_player = new AudioPlayer();
+					speedChangeHandler();
+					_player.addEventListener( CustomEvent.PLAYING_FRAME, playingFrame );
+					_player.play( _editorView.activeSequence );
+				} else {
+					_player.stop();
+					_player.removeEventListener( CustomEvent.PLAYING_FRAME, playingFrame );
+					_player = null;
+				}
+				break;
 		}
 	}
 	
