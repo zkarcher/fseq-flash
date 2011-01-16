@@ -78,6 +78,8 @@ public class OperatorView extends Sprite
 				}
 				break;
 		}
+		
+		blendMode = BlendMode.LAYER;
 	}
 	
 	//--------------------------------------
@@ -113,7 +115,8 @@ public class OperatorView extends Sprite
 	// Hilite when the mouse hovers near this OperatorView, for example
 	public function set hilite( b:Boolean ) :void {
 		if( b ) {
-			this.transform.colorTransform = new ColorTransform( 0.5,0.5,0.5,1, 0x7f,0x7f,0x7f,0 );
+			var dark:Number = Const.INACTIVE_BRIGHTNESS;
+			this.transform.colorTransform = new ColorTransform( dark,dark,dark,1, 0x7f,0x7f,0x7f,0 );
 		} else {
 			this.transform.colorTransform = new ColorTransform();
 		}

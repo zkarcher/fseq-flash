@@ -18,6 +18,14 @@ public class ColorUtil extends Object
 		disp.transform.colorTransform = new ColorTransform( 0,0,0,1, c['r'],c['g'],c['b'],0 );
 	}
 	
+	public static function multiply( disp:DisplayObject, color:uint ) :void {
+		var c:Object = rgb(color);
+		disp.transform.colorTransform = new ColorTransform( 
+			c['r']/255, c['g']/255, c['b']/255, 1, 
+			0,0,0,0
+		);
+	}
+	
 	// Colors are screened with color:uint (all colors become brighter)
 	public static function screen( disp:DisplayObject, color:uint ) :void {
 		var c:Object = rgb(color);

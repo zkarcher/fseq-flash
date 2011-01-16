@@ -13,6 +13,7 @@ package fseq.controller {
 import flash.display.*;
 import flash.events.*;
 import flash.geom.*;
+import flash.ui.*;
 import fl.controls.*;
 import caurina.transitions.Tweener;
 import com.zacharcher.color.*;
@@ -98,6 +99,7 @@ public class AppController extends Sprite
 		if( !stage ) return;
 		removeEventListener( Event.ENTER_FRAME, initEnterFrame );
 		
+		stage.addEventListener( KeyboardEvent.KEY_DOWN, keyDownHandler );
 		stage.addEventListener( KeyboardEvent.KEY_UP, keyUpHandler );
 	}
 		
@@ -114,7 +116,7 @@ public class AppController extends Sprite
 	// Form controls
 	private var _presets :ComboBox;
 	private var _speed :Slider;
-
+	
 	//--------------------------------------
 	//  GETTER/SETTERS
 	//--------------------------------------
@@ -132,8 +134,26 @@ public class AppController extends Sprite
 		}
 	}
 	
+	private function keyDownHandler( e:KeyboardEvent ) :void {
+		/*
+		switch( e.charCode ) {
+			case Keyboard.SHIFT:
+				trace("sHIFT DOWN");
+				_isShiftDown = true;
+				break;
+		}
+		*/
+	}
+	
 	private function keyUpHandler( e:KeyboardEvent ) :void {
 		switch( e.charCode ) {
+			/*
+			case Keyboard.SHIFT:
+				trace("SHIFT UP");
+				_isShiftDown = false;
+				break;
+			*/
+			
 			// Space taggles the audio
 			case ' '.charCodeAt(0):
 				if( !_player ) {
