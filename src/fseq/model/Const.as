@@ -23,12 +23,14 @@ public class Const extends Object
 	public static const PITCH :String = "PITCH";
 	public static const VOICED :String = "VOICED";
 	public static const UNVOICED :String = "UNVOICED";
+	public static const ALL :String = "ALL";
 	
 	// Editor
 	public static const GRAPH_SCALE_X :Number = 2.0;
 	public static const GRAPH_AMP_HEIGHT :Number = 100;
 	public static const GRAPH_FREQ_HEIGHT :Number = 500;
 	public static const VOICED_DOT :String = "VOICED_DOT";
+	public static const INACTIVE_BRIGHTNESS :Number = 0.4;
 	
 	public function Const()
 	{

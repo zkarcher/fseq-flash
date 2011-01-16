@@ -31,6 +31,8 @@ public class EditorView extends Sprite
 	//  CONSTRUCTOR
 	//--------------------------------------
 	public function EditorView() {
+		var i:int;
+		
 		_history = new EditorHistory();
 		
 		/*
@@ -39,7 +41,7 @@ public class EditorView extends Sprite
 		*/
 		
 		_freqView = new GraphView( Const.FREQ );
-		_freqView.y = Const.GRAPH_AMP_HEIGHT + 20;
+		_freqView.y = 40;	//Const.GRAPH_AMP_HEIGHT + 20;
 		addChild( _freqView );
 		
 		with( _freqView ) {
@@ -47,9 +49,29 @@ public class EditorView extends Sprite
 			addEventListener( CustomEvent.EDIT_STOP, editStop );
 		}
 		
+		// Operator buttons
+		_opButtons = new Vector.<OperatorButtonView>();
+		var button:OperatorButtonView;
+		for( i=0; i<Const.VOICED_OPS; i++ ) {
+			button = new OperatorButtonView( Const.VOICED, i );
+			button.x = i * 70;
+			button.y = _freqView.y + Const.GRAPH_FREQ_HEIGHT + 20;
+			_opButtons.push( button );
+		}
+		for( i=0; i<Const.UNVOICED_OPS; i++ ) {
+			button = new OperatorButtonView( Const.UNVOICED, i );
+			button.x = i * 70;
+			button.y = _freqView.y + Const.GRAPH_FREQ_HEIGHT + 80;
+			_opButtons.push( button );
+		}
+		for each( button in _opButtons ) {
+			button.addEventListener( MouseEvent.CLICK, opButtonClick, false, 0, true );
+			addChild( button );
+		}
+		
 		var t:Boolean = true;
 		var f:Boolean = false;
-		setEditableOps( f, [t,t,t,t, t,t,t,t], [f,f,f,f, f,f,f,f] );
+		setEditableOps( f, [t,t,t,t, t,t,t,t], [t,t,t,t, t,t,t,t] );
 	}
 	
 	//--------------------------------------
@@ -59,6 +81,8 @@ public class EditorView extends Sprite
 
 	//private var _ampView :GraphView;
 	private var _freqView :GraphView;
+	
+	private var _opButtons :Vector.<OperatorButtonView>;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -92,6 +116,29 @@ public class EditorView extends Sprite
 	
 	private function editStop( e:CustomEvent ) :void {
 		_history.editStop();
+	}
+	
+	private function opButtonClick( e:MouseEvent ) :void {
+		var button:OperatorButtonView = OperatorButtonView( e.currentTarget );
+
+		if( e.shiftKey ) {
+			button.isOn = !button.isOn;
+		} else {
+			for each( var btn:OperatorButtonView in _opButtons ) {
+				btn.isOn = (btn == button);
+			}
+		}
+		
+		var voiced:Array = [];
+		var unvoiced:Array = [];
+		for each( button in _opButtons ) {
+			switch( button.type ) {
+				case Const.VOICED:		voiced.push( button.isOn ); break;
+				case Const.UNVOICED:	unvoiced.push( button.isOn ); break;
+			}
+		}
+		
+		setEditableOps( false, voiced, unvoiced );
 	}
 	
 	//--------------------------------------

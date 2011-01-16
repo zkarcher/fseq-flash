@@ -212,7 +212,9 @@ public class GraphView extends Sprite
 	private function hiliteOps( liteOpViews:Array ) :void {
 		var opView:OperatorView;
 		for each( opView in _opViews ) {
-			opView.hilite = false;
+			if( opView.isEditable ) {
+				opView.hilite = false;
+			}
 		}
 
 		if( liteOpViews ) {
