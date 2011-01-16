@@ -98,14 +98,23 @@ public class GraphView extends Sprite
 	//--------------------------------------
 	//  PUBLIC METHODS
 	//--------------------------------------
-	public function redraw() :void {
+	public function redrawAll() :void {
 		for each( var opView:OperatorView in _opViews ) {
-			opView.redraw( _fseq );
+			redrawOpView( opView );
 		}
+	}
+	
+	public function redrawOpView( opView:OperatorView, leftFrame:int=-1, rightFrame:int=-1 ) {
+		// Set defaults
+		if( leftFrame==-1 ) leftFrame = 0;
+		if( rightFrame==-1 ) rightFrame = Const.FRAMES - 1;
+
+		opView.redraw( _fseq, leftFrame, rightFrame );
 	}
 	
 	// As the audio plays, display a glowing vertical bar
 	public function scanGlow( col:int ) :void {
+		/*
 		var shp:Shape = new Shape();
 		with( shp.graphics ) {
 			beginFill( 0xffffff, 0.5 );
@@ -114,6 +123,7 @@ public class GraphView extends Sprite
 		}
 		addChild( shp );
 		Tweener.addTween( shp, {alpha:0, time:0.2, transition:"linear", onComplete:removeDisp, onCompleteParams:[shp]});
+		*/
 	}
 	
 	// Set with arrays of Booleans
@@ -241,7 +251,10 @@ public class GraphView extends Sprite
 		
 		_lastMouseLoc = new Point( mouseX, mouseY );
 		
-		redraw();
+		// Redraw the changed areas
+		for each( opView in _hiliteOpViews ) {
+			redrawOpView( opView, leftFrame, rightFrame );
+		}
 	}
 	
 	// Tweener callback

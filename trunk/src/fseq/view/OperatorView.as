@@ -135,7 +135,7 @@ public class OperatorView extends Sprite
 		return _rect.height * (1 - operator.frame(f).freq * (1/7000.0));
 	}
 	
-	public function redraw( fseq:FormantSequence ) :void {
+	public function redraw( fseq:FormantSequence, leftFrame:int, rightFrame:int ) :void {
 		var f:int;
 		var atY:Number;
 		var operator:Operator;
@@ -144,7 +144,7 @@ public class OperatorView extends Sprite
 			case Const.VOICED:
 				operator = fseq.voiced(_id);
 
-				for( f=0; f<Const.FRAMES; f++ ) {
+				for( f=leftFrame; f<=rightFrame; f++ ) {
 					atY = yAtFrame(fseq, f);
 
 					_dots[f].y = atY;
@@ -164,6 +164,7 @@ public class OperatorView extends Sprite
 				break;
 				
 			case Const.UNVOICED:
+				/*
 				operator = fseq.unvoiced(_id);
 
 				if( _shape && _shape.parent ) _shape.parent.removeChild( _shape );
@@ -180,6 +181,7 @@ public class OperatorView extends Sprite
 				}
 				_shape.graphics.endFill();
 				addChild( _shape );
+				*/
 				break;
 			
 		}
