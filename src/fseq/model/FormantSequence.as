@@ -76,6 +76,7 @@ public class FormantSequence extends Object
 	private var _voiced :Vector.<Operator>;
 	private var _unvoiced :Vector.<Operator>;
 	public var tempoAdjust :Number = 1.0;
+	
 	//--------------------------------------
 	//  GETTER/SETTERS
 	//--------------------------------------
@@ -109,7 +110,9 @@ public class FormantSequence extends Object
 			uClone.push( _unvoiced[o].clone() );
 		}
 		
-		return new FormantSequence( pitchClone, vClone, uClone );
+		var out:FormantSequence = new FormantSequence( pitchClone, vClone, uClone );
+		out.tempoAdjust = tempoAdjust;
+		return out;
 	}
 	
 	//--------------------------------------
