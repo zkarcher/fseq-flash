@@ -21,7 +21,7 @@ import fseq.events.*;
 import fseq.model.*;
 import fseq.view.*;
 
-public class EditorHistory extends Object
+public class EditorHistory extends EventDispatcher
 {
 	//--------------------------------------
 	// CLASS CONSTANTS
@@ -65,11 +65,13 @@ public class EditorHistory extends Object
 		popLaterEdits();
 		_history.push( fseq );
 		_activeIndex = _history.length - 1;
+		dispatchActiveChanged();
 	}
 	
 	public function editStart() :void {
 		popLaterEdits();
 		_edit = _history[_activeIndex].clone();
+		dispatchActiveChanged();
 	}
 	
 	public function editStop() :void {
@@ -80,9 +82,11 @@ public class EditorHistory extends Object
 	
 	public function undo() :void {
 		_activeIndex = Math.max( 0, _activeIndex-1 );
+		dispatchActiveChanged();
 	}
 	public function redo() :void {
 		_activeIndex = Math.min( _activeIndex+1, _history.length-1 );
+		dispatchActiveChanged();
 	}
 	
 	//--------------------------------------
@@ -92,6 +96,10 @@ public class EditorHistory extends Object
 	//--------------------------------------
 	//  PRIVATE & PROTECTED INSTANCE METHODS
 	//--------------------------------------
+	private function dispatchActiveChanged() :void {
+		dispatchEvent( new CustomEvent( CustomEvent.ACTIVE_FSEQ_CHANGED ));		
+	}
+	
 	private function popLaterEdits() :void {
 		// Remove any history that is above the _activeIndex level
 		if( _history.length > _activeIndex+1 ) {

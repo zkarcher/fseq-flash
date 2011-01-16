@@ -15,6 +15,9 @@ public class CustomEvent extends Event
 	public static const EDIT_START :String = "EDIT_START";
 	public static const EDIT_STOP :String = "EDIT_STOP";
 	
+	// History
+	public static const ACTIVE_FSEQ_CHANGED :String = "ACTIVE_FSEQ_CHANGED";
+	
 	public function CustomEvent(type:String, inData:Object=null, bubbles:Boolean=true, cancelable:Boolean=false)
 	{
 		super(type, bubbles, cancelable);

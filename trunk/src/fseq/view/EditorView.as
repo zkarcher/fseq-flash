@@ -67,6 +67,8 @@ public class EditorView extends Sprite
 		return _history.activeSequence;
 	}
 	
+	public function get history() :EditorHistory { return _history; }
+	
 	//--------------------------------------
 	//  PUBLIC METHODS
 	//--------------------------------------
