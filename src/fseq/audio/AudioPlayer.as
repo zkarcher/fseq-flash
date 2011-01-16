@@ -46,7 +46,7 @@ public class AudioPlayer extends EventDispatcher
 	private var _resetSyncs :Vector.<Boolean>;
 	private var _setFrameIds :Vector.<int>;
 	
-	private var _seq :FormantSequence;
+	private var _fseq :FormantSequence;
 	public var speedAdjust :Number = 1;
 	private var _frame :int = 0;
 	private var _samplesInFrame :Number = 0;	// Force a new frame to become active
@@ -62,12 +62,16 @@ public class AudioPlayer extends EventDispatcher
 	//--------------------------------------
 	public function get frame() :int { return _frame; }
 	
+	public function set formantSequence( inFseq:FormantSequence ) :void {
+		_fseq = inFseq;
+	}
+	
 	//--------------------------------------
 	//  PUBLIC METHODS
 	//--------------------------------------
 	public function play( inSeq:FormantSequence ) :void {
 		_isActive = true;
-		_seq = inSeq;
+		_fseq = inSeq;
 		
 		if( !_buffer || !_pitchPhases || !_resetSyncs || !_setFrameIds ) {
 			_buffer = new Vector.<Number>(Const.BUFFER_SIZE, true);
@@ -120,14 +124,14 @@ public class AudioPlayer extends EventDispatcher
 			
 			// Determine when to advance to the next frame
 			_samplesInFrame++;
-			if( _samplesInFrame > _seq.samplesPerFrame/speedAdjust ) {
-				_samplesInFrame -= _seq.samplesPerFrame/speedAdjust;
+			if( _samplesInFrame > _fseq.samplesPerFrame/speedAdjust ) {
+				_samplesInFrame -= _fseq.samplesPerFrame/speedAdjust;
 
 				_frame = (_frame+1) % Const.FRAMES;	// Advance to next frame
 				dispatchEvent( new CustomEvent( CustomEvent.PLAYING_FRAME, {frame:_frame}));
 				_setFrameIds[i] = _frame;
 				
-				_pitchInc = _seq.pitch().frame(_frame).freq * ((2*Math.PI) / Const.SAMPLE_RATE);
+				_pitchInc = _fseq.pitch().frame(_frame).freq * ((2*Math.PI) / Const.SAMPLE_RATE);
 				
 			} else {
 				_setFrameIds[i] = -1;
@@ -150,10 +154,10 @@ public class AudioPlayer extends EventDispatcher
 		// Now that we've prepared our various Vectors, we tell each voice to add sounds to the buffer using
 		// all this info.
 		for( i=0; i<Const.VOICED_OPS; i++ ) {
-			_voiced[i].addSamples( _buffer, _pitchPhases, _resetSyncs, _setFrameIds, _seq.voiced(i) );
+			_voiced[i].addSamples( _buffer, _pitchPhases, _resetSyncs, _setFrameIds, _fseq.voiced(i) );
 		}
 		for( i=0; i<Const.UNVOICED_OPS; i++ ) {
-			_unvoiced[i].addSamples( _buffer, _pitchPhases, _resetSyncs, _setFrameIds, _seq.unvoiced(i) );
+			_unvoiced[i].addSamples( _buffer, _pitchPhases, _resetSyncs, _setFrameIds, _fseq.unvoiced(i) );
 		}
 		
 		// Now we can create the final audio

@@ -55,6 +55,7 @@ public class AppController extends Sprite
 		_editorView = new EditorView();
 		_editorView.y = 90;
 		//_editorView.addEventListener( MouseEvent.CLICK, sequenceClickHandler );
+		_editorView.history.addEventListener( CustomEvent.ACTIVE_FSEQ_CHANGED, activeFseqChanged );
 		addChildAt( _editorView, 0 );
 		
 		_presets = new ComboBox();
@@ -125,6 +126,12 @@ public class AppController extends Sprite
 	//--------------------------------------
 	//  EVENT HANDLERS
 	//--------------------------------------
+	private function activeFseqChanged( e:CustomEvent ) :void {
+		if( _player ) {
+			_player.formantSequence = _editorView.activeSequence;
+		}
+	}
+	
 	private function keyUpHandler( e:KeyboardEvent ) :void {
 		switch( e.charCode ) {
 			// Space taggles the audio
