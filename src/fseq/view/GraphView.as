@@ -193,7 +193,7 @@ public class GraphView extends Sprite
 	//  PRIVATE & PROTECTED INSTANCE METHODS
 	//--------------------------------------
 	private function closestOpToMouse() :OperatorView {
-		var frame:int = mouseX / Const.GRAPH_SCALE_X;
+		var frame:int = Num.clamp( mouseX / Const.GRAPH_SCALE_X, 0, Const.FRAMES-1 );
 
 		var bestOp:OperatorView = null;
 		var bestDistance:Number = 999999;
@@ -228,8 +228,8 @@ public class GraphView extends Sprite
 		var op:Operator;
 		var opView:OperatorView;
 		
-		var lastMouseFrame:int = _lastMouseLoc.x / Const.GRAPH_SCALE_X;
-		var mouseFrame:int = mouseX / Const.GRAPH_SCALE_X;
+		var lastMouseFrame:int = Num.clamp( _lastMouseLoc.x / Const.GRAPH_SCALE_X, 0, Const.FRAMES-1 );
+		var mouseFrame:int = Num.clamp( mouseX / Const.GRAPH_SCALE_X, 0, Const.FRAMES-1 );
 		var leftFrame:int = Math.min( lastMouseFrame, mouseFrame );
 		var rightFrame:int = Math.max( lastMouseFrame, mouseFrame );
 		
