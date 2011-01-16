@@ -86,6 +86,8 @@ public class GraphView extends Sprite
 	private var _editType :String;
 	private var _lastMouseLoc :Point;
 	
+	private var _scan :Bitmap;
+	
 	//--------------------------------------
 	//  GETTER/SETTERS
 	//--------------------------------------
@@ -114,16 +116,13 @@ public class GraphView extends Sprite
 	
 	// As the audio plays, display a glowing vertical bar
 	public function scanGlow( col:int ) :void {
-		/*
-		var shp:Shape = new Shape();
-		with( shp.graphics ) {
-			beginFill( 0xffffff, 0.5 );
-			drawRect( col*Const.GRAPH_SCALE_X, 0, Const.GRAPH_SCALE_X, _rect.height );
-			endFill();
+		if( !_scan ) {
+			_scan = new Bitmap( new BitmapData( Math.ceil(Const.GRAPH_SCALE_X), _rect.height, false, 0xffff00 ));
+			_scan.alpha = 0.5;
+			addChild( _scan );
 		}
-		addChild( shp );
-		Tweener.addTween( shp, {alpha:0, time:0.2, transition:"linear", onComplete:removeDisp, onCompleteParams:[shp]});
-		*/
+		
+		_scan.x = Const.GRAPH_SCALE_X * col;
 	}
 	
 	// Set with arrays of Booleans

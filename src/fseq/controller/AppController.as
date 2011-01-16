@@ -165,6 +165,7 @@ public class AppController extends Sprite
 					_player.stop();
 					_player.removeEventListener( CustomEvent.PLAYING_FRAME, playingFrame );
 					_player = null;
+					_editorView.scanGlow( -100 );	// hide the scanner
 				}
 				break;
 		}
@@ -184,6 +185,9 @@ public class AppController extends Sprite
 			_player = null;
 		}
 		*/
+		
+		// Don't let the dropdown keep the focus
+		if( stage ) stage.focus = null;
 		
 		// Flash components are evil. Index is -1 when launched
 		var idx:int = Math.max( 0, _presets.selectedIndex );
