@@ -77,16 +77,11 @@ public class OperatorView extends Sprite
 			case Const.UNVOICED:
 				_circData = new Vector.<BitmapData>();
 				for( i=0; i<MAX_CIRC_RADIUS-2; i++ ) {
-					bData = new BitmapData( i*2+3, i*2+3, true, 0x00ffff );
-					shp = new Shape();
-					with( shp.graphics ) {
-						lineStyle( 1.0, color, 1.0 );	// thickness, color, alpha
-						moveTo( 0, 0 );
-						lineTo( bData.width, bData.height );
-						moveTo( bData.width, 0 );
-						lineTo( 0, bData.height );
-					}
-					bData.draw( shp );
+					bData = new BitmapData( 1, i*2+5, false, color );
+					/*
+					bData.setPixel32( 0, 0, 0xff000000 | color );
+					bData.setPixel32( 0, bData.height-1, 0xff000000 | color );
+					*/
 					_circData.push( bData );
 				}
 			
