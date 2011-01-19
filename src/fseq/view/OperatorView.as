@@ -38,19 +38,27 @@ public class OperatorView extends Sprite
 
 		var color:uint = Const.color( _type, _id );		
 		var i:int;
+		var bData:BitmapData;
+		var shp:Shape;
+		
+		// All operators are represented as a chain of shapes, with dots at their centers
+		_dotData = new BitmapData( 1, 1, false, Const.color( Const.VOICED_DOT ) );
+		_dots = new Vector.<Bitmap>( Const.FRAMES, true );
+		for( i=0; i<Const.FRAMES; i++ ) {
+			_dots[i] = new Bitmap( _dotData, PixelSnapping.ALWAYS, false );
+			_dots[i].x = i*Const.GRAPH_SCALE_X;
+			addChild( _dots[i] );
+		}		
 		
 		switch( _type ) {
-			case Const.VOICED:
-				// Voiced operators are represented as a chain of circles, with dots at their centers
-				_dotData = new BitmapData( 1, 1, false, Const.color( Const.VOICED_DOT ) );
-				
+			case Const.VOICED:				
 				_circData = new Vector.<BitmapData>();
 				for( i=0; i<MAX_CIRC_RADIUS-2; i++ ) {
-					var bData:BitmapData = new BitmapData( MAX_CIRC_RADIUS*2-1, MAX_CIRC_RADIUS*2-1, true, 0x0 );
-					var shp:Shape = new Shape();
+					bData = new BitmapData( i*2+3, i*2+3, true, 0x0 );
+					shp = new Shape();
 					with( shp.graphics ) {
 						beginFill( color, 1.0 );
-						drawCircle( MAX_CIRC_RADIUS-0.5, MAX_CIRC_RADIUS-0.5, i+1.5 );
+						drawCircle( bData.width/2, bData.height/2, i+1.5 );
 						endFill();
 					}
 					bData.draw( shp );
@@ -59,22 +67,35 @@ public class OperatorView extends Sprite
 				
 				// Now that our bitmap data(s) are ready, create all the Bitmaps for the operator
 				_circs = new Vector.<Bitmap>( Const.FRAMES, true );
-				_dots = new Vector.<Bitmap>( Const.FRAMES, true );
 				for( i=0; i<Const.FRAMES; i++ ) {
 					_circs[i] = new Bitmap( _circData[2], PixelSnapping.ALWAYS, false );
 					_circs[i].x = i*Const.GRAPH_SCALE_X - (MAX_CIRC_RADIUS-1);
 					addChildAt( _circs[i], 0 );
-					_dots[i] = new Bitmap( _dotData, PixelSnapping.ALWAYS, false );
-					_dots[i].x = i*Const.GRAPH_SCALE_X;
-					addChild( _dots[i] );	// all black dots are placed on top of the circles
 				}
 				break;
 
 			case Const.UNVOICED:
-				_patternData = new BitmapData( 8, 1, true, 0x0 );
-				for( var p:int=0; p<8; p++ ) {
-					var color32:uint = color | (int(p*(255/8)) << 24);
-					_patternData.setPixel32( p, 0, color32 );
+				_circData = new Vector.<BitmapData>();
+				for( i=0; i<MAX_CIRC_RADIUS-2; i++ ) {
+					bData = new BitmapData( i*2+3, i*2+3, true, 0x00ffff );
+					shp = new Shape();
+					with( shp.graphics ) {
+						lineStyle( 1.0, color, 1.0 );	// thickness, color, alpha
+						moveTo( 0, 0 );
+						lineTo( bData.width, bData.height );
+						moveTo( bData.width, 0 );
+						lineTo( 0, bData.height );
+					}
+					bData.draw( shp );
+					_circData.push( bData );
+				}
+			
+				// Now that our bitmap data(s) are ready, create all the Bitmaps for the operator
+				_circs = new Vector.<Bitmap>( Const.FRAMES, true );
+				for( i=0; i<Const.FRAMES; i++ ) {
+					_circs[i] = new Bitmap( _circData[0], PixelSnapping.ALWAYS, false );
+					_circs[i].x = i*Const.GRAPH_SCALE_X - (MAX_CIRC_RADIUS-1);
+					addChildAt( _circs[i], 0 );
 				}
 				break;
 		}
@@ -90,15 +111,11 @@ public class OperatorView extends Sprite
 	private var _rect :Rectangle;
 	private var _isEditable :Boolean;
 	
-	// DRAWING: Voiced:
+	// DRAWING: Voiced & unvoiced bitmaps
 	private var _circData :Vector.<BitmapData>;
 	private var _circs :Vector.<Bitmap>;
 	private var _dotData :BitmapData;
 	private var _dots :Vector.<Bitmap>;
-	
-	// DRAWING: Unvoiced
-	private var _patternData :BitmapData;
-	private var _shape :Shape;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -140,18 +157,19 @@ public class OperatorView extends Sprite
 	
 	public function redraw( fseq:FormantSequence, leftFrame:int, rightFrame:int ) :void {
 		var f:int;
+		var atX:Number;
 		var atY:Number;
 		var operator:Operator;
 		
 		switch( _type ) {
 			case Const.VOICED:
+			case Const.UNVOICED:
 				operator = fseq.voiced(_id);
 
 				for( f=leftFrame; f<=rightFrame; f++ ) {
+					atX = f * Const.GRAPH_SCALE_X;
 					atY = yAtFrame(fseq, f);
-
 					_dots[f].y = atY;
-					_circs[f].y = atY - (MAX_CIRC_RADIUS-1);
 
 					// Change the circle size, if necessary.
 					// Louder frames have larger circles.
@@ -163,11 +181,14 @@ public class OperatorView extends Sprite
 						circId--;
 					}
 					_circs[f].bitmapData = _circData[circId];
+					
+					_circs[f].x = atX - _circs[f].bitmapData.width / 2;
+					_circs[f].y = atY - _circs[f].bitmapData.height / 2;
 				}
 				break;
-				
+			
+			/*	
 			case Const.UNVOICED:
-				/*
 				operator = fseq.unvoiced(_id);
 
 				if( _shape && _shape.parent ) _shape.parent.removeChild( _shape );
@@ -184,9 +205,8 @@ public class OperatorView extends Sprite
 				}
 				_shape.graphics.endFill();
 				addChild( _shape );
-				*/
 				break;
-			
+			*/
 		}
 
 	}

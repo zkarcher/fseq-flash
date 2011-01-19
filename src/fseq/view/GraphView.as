@@ -35,10 +35,7 @@ public class GraphView extends Sprite
 		
 		_rect = new Rectangle( 0, 0, Const.FRAMES * Const.GRAPH_SCALE_X, isFreq ? Const.GRAPH_FREQ_HEIGHT : Const.GRAPH_AMP_HEIGHT );
 		scrollRect = _rect;
-		
-		_bg = new Bitmap( new BitmapData( _rect.width, _rect.height, false, 0x0 ), PixelSnapping.ALWAYS, false );
-		addChild( _bg );
-		
+				
 		_opViews = new Vector.<OperatorView>();
 		var i:int;
 		for( i=0; i<Const.VOICED_OPS; i++ ) {
@@ -50,8 +47,11 @@ public class GraphView extends Sprite
 		
 		// Add all the opViews to the canvas
 		for each( var opView:OperatorView in _opViews ) {
-			addChild( opView );
+			addChildAt( opView, 0 );
 		}
+		
+		_bg = new Bitmap( new BitmapData( _rect.width, _rect.height, false, 0x0 ), PixelSnapping.ALWAYS, false );
+		addChildAt( _bg, 0 );
 		
 		addEventListener( Event.ENTER_FRAME, initEnterFrame );
 	}
