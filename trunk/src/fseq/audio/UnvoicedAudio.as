@@ -62,7 +62,7 @@ public class UnvoicedAudio extends BaseAudio
 			updateTween();
 			
 			// Create the sound
-			_freqPhase += _freqInc + ((Math.random()*2)-1) * 0.3;
+			_freqPhase += _freqInc + ((Math.random()*2)-1) * 0.2;
 			buffer[i] += Math.sin( _freqPhase ) * _amp * 0.75;
 		}
 	}
