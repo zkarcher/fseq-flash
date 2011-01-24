@@ -86,7 +86,7 @@ public class OperatorView extends Sprite
 
 			case Const.UNVOICED:
 				if( !_noise ) {
-					_noise = new BitmapData( NOISE_WIDTH, NOISE_HEIGHT, true, 0xffffff00 );
+					_noise = new BitmapData( NOISE_WIDTH, NOISE_HEIGHT, false, 0xffff00 );
 					var now:Date = new Date();
 					//_noise.noise( int(now.time), 0, 255 );	// plain noise is kinda dull
 					_noise.perlinNoise( 4, 4, 3, int(now.time), true, false );
@@ -97,10 +97,16 @@ public class OperatorView extends Sprite
 				
 				_bands = new Vector.<Bitmap>( Const.FRAMES, true );
 				for( i=0; i<Const.FRAMES; i++ ) {
-					bData = new BitmapData( 1, 1, true, 0x0 );
+					bData = new BitmapData( Math.ceil(Const.GRAPH_SCALE_X), NOISE_HEIGHT, false, 0x0 );
 					var bmp:Bitmap = new Bitmap( bData, PixelSnapping.ALWAYS, false );
 					bmp.x = i * Const.GRAPH_SCALE_X;
 					_bandSpr.addChild( bmp );
+					
+					// Draw the noise layer
+					var mtx:Matrix = new Matrix();
+					mtx.translate( -((Const.GRAPH_SCALE_X * i) % NOISE_WIDTH), 0 );
+					bData.draw( _noise, mtx );
+					
 					_bands[i] = bmp;
 				}
 				
@@ -210,15 +216,8 @@ public class OperatorView extends Sprite
 					atHeight = Num.interpolate( MIN_NOISE_DISPLAY_HEIGHT, NOISE_HEIGHT, operatorInSequence(fseq).frame(f).amp );
 					atY = yAtFrame(fseq, f);	// this is the y center of our bitmap
 					
-					// For each frame that needs to be redrawn, create a new column by resampling the _noise.
-					var bData:BitmapData = new BitmapData( Math.ceil(Const.GRAPH_SCALE_X), atHeight, true, 0x0 );
-					var mtx:Matrix = new Matrix();
-					mtx.translate( -(atX % NOISE_WIDTH), -((NOISE_HEIGHT - atHeight)/2) );
-					bData.draw( _noise, mtx );
-					
-					// Now set the Bitmap with the new noise sliver graphic
 					with( _bands[f] ) {
-						bitmapData = bData;
+						scrollRect = new Rectangle( 0, (NOISE_HEIGHT-atHeight)/2, Math.ceil(Const.GRAPH_SCALE_X), atHeight );
 						y = atY - atHeight/2;
 					}
 				}
