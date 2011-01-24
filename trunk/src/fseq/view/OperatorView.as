@@ -27,6 +27,8 @@ public class OperatorView extends Sprite
 	// CLASS CONSTANTS
 	//--------------------------------------
 	private static const MAX_CIRC_RADIUS :Number = 8;
+	private static const NOISE_WIDTH :int = 256;
+	private static const NOISE_HEIGHT :int = 64;
 	
 	//--------------------------------------
 	//  CONSTRUCTOR
@@ -72,30 +74,31 @@ public class OperatorView extends Sprite
 					_circs[i].x = i*Const.GRAPH_SCALE_X - (MAX_CIRC_RADIUS-1);
 					addChildAt( _circs[i], 0 );
 				}
+				
+				// The circles will overlap, so render as a single layer (looks better when dimmed)
+				blendMode = BlendMode.LAYER;
+				
 				break;
 
 			case Const.UNVOICED:
-				_circData = new Vector.<BitmapData>();
-				for( i=0; i<MAX_CIRC_RADIUS-2; i++ ) {
-					bData = new BitmapData( 1, i*2+5, false, color );
-					/*
-					bData.setPixel32( 0, 0, 0xff000000 | color );
-					bData.setPixel32( 0, bData.height-1, 0xff000000 | color );
-					*/
-					_circData.push( bData );
+				if( !_noise ) {
+					_noise = new BitmapData( NOISE_WIDTH, NOISE_HEIGHT, true, 0x0 );
+					var now:Date = new Date();
+					_noise.perlinNoise( NOISE_WIDTH, NOISE_HEIGHT, 3, int(now.time), true, false );
 				}
-			
-				// Now that our bitmap data(s) are ready, create all the Bitmaps for the operator
-				_circs = new Vector.<Bitmap>( Const.FRAMES, true );
+				
+				_bands = new Vector.<Bitmap>( Const.FRAMES, true );
 				for( i=0; i<Const.FRAMES; i++ ) {
-					_circs[i] = new Bitmap( _circData[0], PixelSnapping.ALWAYS, false );
-					_circs[i].x = i*Const.GRAPH_SCALE_X - (MAX_CIRC_RADIUS-1);
-					addChildAt( _circs[i], 0 );
+					bData = new BitmapData( 1, 1, true, 0x0 );
+					var bmp:Bitmap = new Bitmap( bData, PixelSnapping.ALWAYS, false );
+					bmp.x = i * Const.GRAPH_SCALE_X;
+					addChild( bmp );
+					_bands[i] = bmp;
 				}
+				
 				break;
 		}
 		
-		blendMode = BlendMode.LAYER;
 	}
 	
 	//--------------------------------------
@@ -106,11 +109,15 @@ public class OperatorView extends Sprite
 	private var _rect :Rectangle;
 	private var _isEditable :Boolean;
 	
-	// DRAWING: Voiced & unvoiced bitmaps
+	// Voiced paint splotches
 	private var _circData :Vector.<BitmapData>;
 	private var _circs :Vector.<Bitmap>;
 	private var _dotData :BitmapData;
 	private var _dots :Vector.<Bitmap>;
+	
+	// Unvoiced color-cycling noise
+	private static var _noise :BitmapData;
+	private var _bands :Vector.<Bitmap>;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -154,11 +161,11 @@ public class OperatorView extends Sprite
 		var f:int;
 		var atX:Number;
 		var atY:Number;
+		var atHeight :Number;
 		var operator:Operator;
 		
 		switch( _type ) {
 			case Const.VOICED:
-			case Const.UNVOICED:
 				operator = fseq.voiced(_id);
 
 				for( f=leftFrame; f<=rightFrame; f++ ) {
@@ -182,8 +189,29 @@ public class OperatorView extends Sprite
 				}
 				break;
 			
-			/*	
 			case Const.UNVOICED:
+				operator = fseq.unvoiced(_id);
+				
+				for( f=leftFrame; f<=rightFrame; f++ ) {
+					atX = f * Const.GRAPH_SCALE_X;
+					atHeight = Num.interpolate( 10, NOISE_HEIGHT, operatorInSequence(fseq).frame(f).amp );
+					atY = yAtFrame(fseq, f) - atHeight/2;
+					
+					// For each frame that needs to be redrawn, create a new column by resampling _noise.
+					var bData:BitmapData = new BitmapData( Math.ceil(Const.GRAPH_SCALE_X), atHeight, true, 0x0 );
+					var mtx:Matrix = new Matrix();
+					mtx.translate( -(atX % NOISE_WIDTH), (atHeight - NOISE_HEIGHT)/2 );
+					bData.draw( _noise, mtx );
+					
+					// Now set the Bitmap with the new noise sliver graphic
+					with( _bands[f] ) {
+						bitmapData = bData;
+						y = atY - atHeight/2;
+					}
+				}
+				break;
+			
+				/*
 				operator = fseq.unvoiced(_id);
 
 				if( _shape && _shape.parent ) _shape.parent.removeChild( _shape );
@@ -201,7 +229,7 @@ public class OperatorView extends Sprite
 				_shape.graphics.endFill();
 				addChild( _shape );
 				break;
-			*/
+				*/
 		}
 
 	}
