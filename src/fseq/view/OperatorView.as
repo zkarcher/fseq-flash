@@ -28,7 +28,8 @@ public class OperatorView extends Sprite
 	//--------------------------------------
 	private static const MAX_CIRC_RADIUS :Number = 8;
 	private static const NOISE_WIDTH :int = 256;
-	private static const NOISE_HEIGHT :int = 64;
+	private static const NOISE_HEIGHT :int = 128;
+	private static const MIN_NOISE_DISPLAY_HEIGHT :Number = 12;
 	
 	//--------------------------------------
 	//  CONSTRUCTOR
@@ -82,9 +83,10 @@ public class OperatorView extends Sprite
 
 			case Const.UNVOICED:
 				if( !_noise ) {
-					_noise = new BitmapData( NOISE_WIDTH, NOISE_HEIGHT, true, 0x0 );
+					_noise = new BitmapData( NOISE_WIDTH, NOISE_HEIGHT, true, 0xffffff00 );
 					var now:Date = new Date();
-					_noise.perlinNoise( NOISE_WIDTH, NOISE_HEIGHT, 3, int(now.time), true, false );
+					//_noise.noise( int(now.time), 0, 255 );	// plain noise is kinda dull
+					_noise.perlinNoise( 4, 4, 3, int(now.time), true, false );
 				}
 				
 				_bands = new Vector.<Bitmap>( Const.FRAMES, true );
@@ -194,13 +196,13 @@ public class OperatorView extends Sprite
 				
 				for( f=leftFrame; f<=rightFrame; f++ ) {
 					atX = f * Const.GRAPH_SCALE_X;
-					atHeight = Num.interpolate( 10, NOISE_HEIGHT, operatorInSequence(fseq).frame(f).amp );
-					atY = yAtFrame(fseq, f) - atHeight/2;
+					atHeight = Num.interpolate( MIN_NOISE_DISPLAY_HEIGHT, NOISE_HEIGHT, operatorInSequence(fseq).frame(f).amp );
+					atY = yAtFrame(fseq, f);	// this is the y center of our bitmap
 					
-					// For each frame that needs to be redrawn, create a new column by resampling _noise.
+					// For each frame that needs to be redrawn, create a new column by resampling the _noise.
 					var bData:BitmapData = new BitmapData( Math.ceil(Const.GRAPH_SCALE_X), atHeight, true, 0x0 );
 					var mtx:Matrix = new Matrix();
-					mtx.translate( -(atX % NOISE_WIDTH), (atHeight - NOISE_HEIGHT)/2 );
+					mtx.translate( -(atX % NOISE_WIDTH), -((NOISE_HEIGHT - atHeight)/2) );
 					bData.draw( _noise, mtx );
 					
 					// Now set the Bitmap with the new noise sliver graphic
@@ -211,25 +213,6 @@ public class OperatorView extends Sprite
 				}
 				break;
 			
-				/*
-				operator = fseq.unvoiced(_id);
-
-				if( _shape && _shape.parent ) _shape.parent.removeChild( _shape );
-				
-				_shape = new Shape();
-				_shape.graphics.beginBitmapFill( _patternData, null, true );
-				for( f=0; f<Const.FRAMES; f++ ) {
-					atY = yAtFrame(fseq, f);
-					_shape.graphics.lineTo( f*Const.GRAPH_SCALE_X, atY - operator.frame(f).amp * MAX_CIRC_RADIUS );
-				}
-				for( f=Const.FRAMES-1; f>=0; f-- ) {
-					atY = yAtFrame(fseq, f);
-					_shape.graphics.lineTo( f*Const.GRAPH_SCALE_X, atY + operator.frame(f).amp * MAX_CIRC_RADIUS );
-				}
-				_shape.graphics.endFill();
-				addChild( _shape );
-				break;
-				*/
 		}
 
 	}
