@@ -12,6 +12,7 @@ package fseq.view {
 
 import flash.display.*;
 import flash.events.*;
+import flash.filters.*;
 import flash.geom.*;
 import caurina.transitions.Tweener;
 import com.zacharcher.color.*;
@@ -28,8 +29,10 @@ public class OperatorView extends Sprite
 	//--------------------------------------
 	private static const MAX_CIRC_RADIUS :Number = 8;
 	private static const NOISE_WIDTH :int = 256;
-	private static const NOISE_HEIGHT :int = 128;
-	private static const MIN_NOISE_DISPLAY_HEIGHT :Number = 12;
+	private static const NOISE_HEIGHT :int = 100;
+	private static const MIN_NOISE_DISPLAY_HEIGHT :Number = 4;
+	private static const CYCLE_INCREMENT :Number = 0.06;
+	private static const NOISE_BRIGHTNESS :Number = 2.0;
 	
 	//--------------------------------------
 	//  CONSTRUCTOR
@@ -89,18 +92,22 @@ public class OperatorView extends Sprite
 					_noise.perlinNoise( 4, 4, 3, int(now.time), true, false );
 				}
 				
+				_bandSpr = new Sprite();
+				addChild( _bandSpr );
+				
 				_bands = new Vector.<Bitmap>( Const.FRAMES, true );
 				for( i=0; i<Const.FRAMES; i++ ) {
 					bData = new BitmapData( 1, 1, true, 0x0 );
 					var bmp:Bitmap = new Bitmap( bData, PixelSnapping.ALWAYS, false );
 					bmp.x = i * Const.GRAPH_SCALE_X;
-					addChild( bmp );
+					_bandSpr.addChild( bmp );
 					_bands[i] = bmp;
 				}
 				
+				addEventListener( Event.ENTER_FRAME, enterFrame, false, 0, true );
+				
 				break;
 		}
-		
 	}
 	
 	//--------------------------------------
@@ -119,7 +126,9 @@ public class OperatorView extends Sprite
 	
 	// Unvoiced color-cycling noise
 	private static var _noise :BitmapData;
+	private var _bandSpr :Sprite;
 	private var _bands :Vector.<Bitmap>;
+	private var _cycle :Number = 0;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -220,6 +229,36 @@ public class OperatorView extends Sprite
 	//--------------------------------------
 	//  EVENT HANDLERS
 	//--------------------------------------
+	private function enterFrame( e:Event ) :void {
+		if( _type == Const.UNVOICED ) {
+			_cycle += CYCLE_INCREMENT;
+			var color:uint = Const.color( _type, _id );
+			var rgb:Object = ColorUtil.rgb( color );
+			
+			// Start with a cmt matrix that only preserves the alpha
+			var mtx:Array = [	0,0,0,0,0, 
+								0,0,0,0,0, 
+								0,0,0,0,0, 
+								0,0,0,1,0	];
+			
+			var cyclePhase:Number = _cycle % 3.0;
+			// channels: 0=red, 1=green, 2=blue
+			var fromChannel:int = Math.floor( cyclePhase );
+			var toChannel:int = (fromChannel+1) % 3;
+			
+			var fadePhase:Number = _cycle % 1.0;
+			var fadeOut :Number = (1-fadePhase)*NOISE_BRIGHTNESS;
+			var fadeIn :Number = fadePhase*NOISE_BRIGHTNESS;
+			mtx[ fromChannel ] = fadeOut * rgb.r/255;
+			mtx[ fromChannel+5 ] = fadeOut * rgb.g/255;
+			mtx[ fromChannel+10 ] = fadeOut * rgb.b/255;
+			mtx[ toChannel ] = fadeIn * rgb.r/255;
+			mtx[ toChannel+5 ] = fadeIn * rgb.g/255;
+			mtx[ toChannel+10 ] = fadeIn * rgb.b/255;
+			
+			_bandSpr.filters = [new ColorMatrixFilter(mtx)];
+		}
+	}
 	
 	//--------------------------------------
 	//  PRIVATE & PROTECTED INSTANCE METHODS
