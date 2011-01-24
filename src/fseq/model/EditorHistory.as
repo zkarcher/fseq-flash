@@ -32,7 +32,7 @@ public class EditorHistory extends EventDispatcher
 	//--------------------------------------
 	public function EditorHistory() {
 		_history = new Vector.<FormantSequence>();
-		
+		pushSequence( new FormantSequence() );
 	}
 	
 	//--------------------------------------
@@ -65,13 +65,13 @@ public class EditorHistory extends EventDispatcher
 		popLaterEdits();
 		_history.push( fseq );
 		_activeIndex = _history.length - 1;
-		dispatchActiveChanged();
+		dispatchActiveChanged( true );
 	}
 	
 	public function editStart() :void {
 		popLaterEdits();
 		_edit = _history[_activeIndex].clone();
-		dispatchActiveChanged();
+		dispatchActiveChanged( false );
 	}
 	
 	public function editStop() :void {
@@ -82,11 +82,11 @@ public class EditorHistory extends EventDispatcher
 	
 	public function undo() :void {
 		_activeIndex = Math.max( 0, _activeIndex-1 );
-		dispatchActiveChanged();
+		dispatchActiveChanged( true );
 	}
 	public function redo() :void {
 		_activeIndex = Math.min( _activeIndex+1, _history.length-1 );
-		dispatchActiveChanged();
+		dispatchActiveChanged( true );
 	}
 	
 	//--------------------------------------
@@ -96,14 +96,14 @@ public class EditorHistory extends EventDispatcher
 	//--------------------------------------
 	//  PRIVATE & PROTECTED INSTANCE METHODS
 	//--------------------------------------
-	private function dispatchActiveChanged() :void {
-		dispatchEvent( new CustomEvent( CustomEvent.ACTIVE_FSEQ_CHANGED ));		
+	private function dispatchActiveChanged( redraw:Boolean ) :void {
+		dispatchEvent( new CustomEvent( CustomEvent.ACTIVE_FSEQ_CHANGED, {redraw:redraw} ));		
 	}
 	
 	private function popLaterEdits() :void {
 		// Remove any history that is above the _activeIndex level
 		if( _history.length > _activeIndex+1 ) {
-			_history.splice( _activeIndex+1, 999999 );
+			_history.splice( _activeIndex+1, _history.length - (_activeIndex+1) );
 		}
 	}
 	

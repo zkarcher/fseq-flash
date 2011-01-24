@@ -169,6 +169,8 @@ public class OperatorView extends Sprite
 	}
 	
 	public function redraw( fseq:FormantSequence, leftFrame:int, rightFrame:int ) :void {
+		if( !fseq ) return;
+		
 		var f:int;
 		var atX:Number;
 		var atY:Number;
