@@ -43,6 +43,7 @@ public class Const extends Object
 				return 0xffffff;
 			
 			case Const.VOICED:
+			case Const.UNVOICED:
 				return [0xff4801,0xfe1d16,0xfe1f72,0xfd2096,0xf626ff,0xc749ff,0x9350ff,0x6b78ff][id];
 				
 			case Const.VOICED_DOT:
@@ -52,9 +53,11 @@ public class Const extends Object
 				rgb.g = (rgb.g + 0xff) / 2;
 				rgb.b = (rgb.b + 0xff) / 2;
 				return (rgb.r << 16) | (rgb.g << 8) | rgb.b;
-				
+			
+			/*	
 			case Const.UNVOICED:
 				return [0x00feed,0x00f6c0,0x00ec86,0x00db40,0x08c827,0x1cb827,0x459b34,0x787a52][id];
+				*/
 		}
 		trace("** SequenceView: What weird color are you looking for? I only accept", Const.PITCH, Const.VOICED, Const.UNVOICED, "...", type, id);
 		return 0x444444;
