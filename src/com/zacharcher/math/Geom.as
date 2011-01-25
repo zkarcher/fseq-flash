@@ -43,6 +43,5 @@ package com.zacharcher.math {
 				p1.y*invProgress + p2.y*progress
 			);
 		}
-
 	}	
 }

@@ -76,6 +76,17 @@ public class FormantSequence extends Object
 	private var _voiced :Vector.<Operator>;
 	private var _unvoiced :Vector.<Operator>;
 	public var tempoAdjust :Number = 1.0;
+
+	public var title :String;
+	public var loopStart :int;
+	public var loopEnd :int;
+	public var loopMode :String;
+	public var speedAdjust :int;
+	public var velSensitivity :int;
+	public var pitchMode :String;
+	public var noteAssign :int;
+	public var pitchTuning :int;
+	public var seqDelay :int;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
