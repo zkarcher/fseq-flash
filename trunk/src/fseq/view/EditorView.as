@@ -74,9 +74,6 @@ public class EditorView extends Sprite
 		var f:Boolean = false;
 		setEditableOps( f, [t,t,t,t, t,t,t,t], [t,t,t,t, t,t,t,t] );
 		
-		_undo = new BasicButton("undo");
-		_undo.addEventListener( MouseEvent.CLICK, undoClick );
-		addChild( _undo );
 	}
 	
 	//--------------------------------------
@@ -87,7 +84,6 @@ public class EditorView extends Sprite
 	//private var _ampView :GraphView;
 	private var _freqView :GraphView;
 	
-	private var _undo :BasicButton;
 	private var _opButtons :Vector.<OperatorButtonView>;
 	
 	//--------------------------------------
@@ -110,6 +106,10 @@ public class EditorView extends Sprite
 	
 	public function scanGlow( col:int ) :void {
 		_freqView.scanGlow( col );
+	}
+	
+	public function undo() :void {
+		_history.undo();
 	}
 	
 	//--------------------------------------
@@ -146,11 +146,7 @@ public class EditorView extends Sprite
 		
 		setEditableOps( false, voiced, unvoiced );
 	}
-	
-	private function undoClick( e:MouseEvent ) :void {
-		_history.undo();
-	}
-	
+		
 	private function activeFseqChangedHandler( e:CustomEvent ) :void {
 		if( e.data['redraw'] == true ) {
 			_freqView.fseq = _history.activeSequence;

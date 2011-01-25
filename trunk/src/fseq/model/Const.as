@@ -15,6 +15,12 @@ public class Const extends Object
 	public static const VOICED_OPS :int = 8;
 	public static const UNVOICED_OPS :int = 8;
 	
+	// Fseq settings
+	public static const ONE_WAY :String = "one way";
+	public static const ROUND :String = "round";
+	public static const FSEQ_PITCH :String = "fseq pitch";
+	public static const FREE_PITCH :String = "free pitch";
+	
 	// View modes & color palettes, etc
 	public static const FREQ :String = "FREQ";
 	public static const AMP :String = "AMP";

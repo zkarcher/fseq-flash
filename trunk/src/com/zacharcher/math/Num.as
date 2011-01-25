@@ -65,7 +65,17 @@ package com.zacharcher.math {
 		public static function wrap( signal:Number, height:Number ) :Number {
 			return signal - (Math.floor( signal / height ) * height);
 		}
-	
+		
+		public static function dither( num:Number ) :Number {
+			var decimal:Number = num - Math.floor(num);
+			if( Math.random() < decimal ) return Math.ceil( num );
+			return Math.floor( num );
+		}
+		
+		// Base 2 logarithm
+		public static function lg( num:Number ) :Number {
+			return Math.log( num ) / Math.LN2;
+		}
 	}
 	
 }

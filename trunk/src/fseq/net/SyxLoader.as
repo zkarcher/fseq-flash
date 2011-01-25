@@ -19,6 +19,7 @@ import caurina.transitions.Tweener;
 import com.zacharcher.color.*;
 import com.zacharcher.math.*;
 import fseq.controller.*;
+import fseq.events.*;
 import fseq.model.*;
 import fseq.net.*;
 
@@ -38,6 +39,8 @@ public class SyxLoader extends BaseLoader
 	//--------------------------------------
 	//  PRIVATE VARIABLES
 	//--------------------------------------
+	private var _seq :FormantSequence;
+	private var _file :FileReference;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -47,19 +50,35 @@ public class SyxLoader extends BaseLoader
 	//--------------------------------------
 	//  PUBLIC METHODS
 	//--------------------------------------
-	private var _seq :FormantSequence;
+	public function loadFile() :void {
+		_file = new FileReference();
+		_file.addEventListener( Event.SELECT, fileSelected, false, 0, true );
+		_file.addEventListener( Event.COMPLETE, fileReferenceLoaded, false, 0, true );
+		var filter:FileFilter = new FileFilter("SysEx files","*.syx");
+		_file.browse( [filter] );
+	}
 	
 	//--------------------------------------
 	//  EVENT HANDLERS
 	//--------------------------------------
+	private function fileSelected( e:Event ) :void {
+		_file.load();
+	}
+	
+	private function fileReferenceLoaded( e:Event ) :void {
+		readByteArray( _file.data );
+	}
 	
 	//--------------------------------------
 	//  PRIVATE & PROTECTED INSTANCE METHODS
 	//--------------------------------------
 	protected override function handleLoaderComplete() :void {
+		readByteArray( _urlLoader.data );
+	}
+	
+	private function readByteArray( ba:ByteArray ) :void {
 		var i:int;
 		
-		var ba:ByteArray = ByteArray(_urlLoader.data);
 		ba.position = 0;
 		
 		// This file format is specified in the FS1RE2.PDF file available on the intertubes
@@ -226,6 +245,18 @@ public class SyxLoader extends BaseLoader
 		_seq = new FormantSequence();
 		_seq.initWithBytes( pitch, voicedFreq, voicedLevel, unvoicedFreq, unvoicedLevel );
 		_seq.tempoAdjust = Math.max( totalFrames / 512.0, 0.4 );
+		_seq.title = title;
+		_seq.loopStart = loopStart;
+		_seq.loopEnd = loopEnd;
+		_seq.loopMode = (loopMode==0) ? Const.ONE_WAY : Const.ROUND;
+		_seq.speedAdjust = speedAdjust;
+		_seq.velSensitivity = velSensitivity;
+		_seq.pitchMode = (pitchMode==0) ? Const.FSEQ_PITCH : Const.FREE_PITCH;
+		_seq.noteAssign = noteAssign;
+		_seq.pitchTuning = pitchTuning;
+		_seq.seqDelay = seqDelay;
+		
+		dispatchEvent( new CustomEvent( CustomEvent.FSEQ_COMPLETE ));
 	}
 	
 	private function assertEquals( a:uint, b:uint, description:String=null ) :uint {

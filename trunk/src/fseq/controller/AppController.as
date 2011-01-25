@@ -92,6 +92,23 @@ public class AppController extends Sprite
 		addChild( _sweep );
 		addEventListener( Event.ENTER_FRAME, enterFrameHandler, false, 0, true );
 		
+		//
+		// buttons
+		//
+		_undo = new BasicButton("undo");
+		_undo.addEventListener( MouseEvent.CLICK, undoClick );
+		addChild( _undo );
+		
+		_load = new BasicButton("load");
+		_load.addEventListener( MouseEvent.CLICK, loadClick );
+		addChild( _load );
+		_load.x = _undo.x + _undo.width + 10;
+		
+		_save = new BasicButton("save");
+		_save.addEventListener( MouseEvent.CLICK, saveClick );
+		addChild( _save );
+		_save.x = _load.x + _load.width + 10;
+		
 		addEventListener( Event.ENTER_FRAME, initEnterFrame );
 	}
 	
@@ -116,6 +133,11 @@ public class AppController extends Sprite
 	// Form controls
 	private var _presets :ComboBox;
 	private var _speed :Slider;
+	
+	// buttons
+	private var _undo :BasicButton;
+	private var _load :BasicButton;
+	private var _save :BasicButton;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -162,10 +184,7 @@ public class AppController extends Sprite
 					_player.addEventListener( CustomEvent.PLAYING_FRAME, playingFrame );
 					_player.play( _editorView.activeSequence );
 				} else {
-					_player.stop();
-					_player.removeEventListener( CustomEvent.PLAYING_FRAME, playingFrame );
-					_player = null;
-					_editorView.scanGlow( -100 );	// hide the scanner
+					stopAudio();
 				}
 				break;
 		}
@@ -194,16 +213,35 @@ public class AppController extends Sprite
 		var path:String = Presets.pathToFS1RSequenceId( idx );
 		
 		_loader = new SyxLoader();
-		_loader.addEventListener( CustomEvent.LOAD_COMPLETE, loadComplete, false, 0, true );
+		_loader.addEventListener( CustomEvent.FSEQ_COMPLETE, fseqComplete, false, 0, true );
 		_loader.addEventListener( CustomEvent.LOAD_FAILED, loadFailed, false, 0, true );
 		_loader.initWithURL( path );
+	}
+	
+	private function undoClick( e:MouseEvent ) :void {
+		_editorView.undo();
+	}
+	
+	private function loadClick( e:MouseEvent ):void {
+		stopAudio();
+		
+		_loader = new SyxLoader();
+		_loader.addEventListener( CustomEvent.FSEQ_COMPLETE, fseqComplete, false, 0, true );
+		_loader.addEventListener( CustomEvent.LOAD_FAILED, loadFailed, false, 0, true );
+		_loader.loadFile();
+	}
+	
+	private function saveClick( e:MouseEvent ) :void {
+		stopAudio();
+		
+		var saver:SyxSaver = new SyxSaver( _editorView.activeSequence, 512 );
 	}
 	
 	private function loadFailed( e:CustomEvent ) :void {
 		trace("** Load failed, bawwwwwwwww", e.data['error']);
 	}
 	
-	private function loadComplete( e:CustomEvent ) :void {
+	private function fseqComplete( e:CustomEvent ) :void {
 		var seq:FormantSequence = _loader.formantSequence;
 		/*
 		_seqView = new SequenceView( Const.FREQ, _seq );
@@ -233,7 +271,14 @@ public class AppController extends Sprite
 	//--------------------------------------
 	//  PRIVATE & PROTECTED INSTANCE METHODS
 	//--------------------------------------
-	
+	private function stopAudio() :void {
+		if( !_player ) return;
+		
+		_player.stop();
+		_player.removeEventListener( CustomEvent.PLAYING_FRAME, playingFrame );
+		_player = null;
+		_editorView.scanGlow( -100 );	// hide the scanner
+	}
 }
 
 }

@@ -7,6 +7,7 @@ public class CustomEvent extends Event
 {
 	public static const LOAD_COMPLETE :String = "LOAD_COMPLETE";
 	public static const LOAD_FAILED :String = "LOAD_FAILED";
+	public static const FSEQ_COMPLETE :String = "FSEQ_COMPLETE";
 	
 	// Audio playback
 	public static const PLAYING_FRAME :String = "PLAYING_FRAME";
