@@ -39,13 +39,20 @@ public class SyxSaver extends Object
 		// Build a ByteArray of the data we're going to save. This is basically the inverse of SyxLoader.handleLoaderComplete ;)
 		var ba:ByteArray = new ByteArray();
 		
-		var ar:Array = [0xf0,0x43,0x00,0x5e,0x10];
-		// I'm not sure what this byte signifies exactly:
+		var ar:Array = [0xf0,0x43,0x00,0x5e];
+
+		// I'm not sure what these bytes signify exactly:
+		// Byte count?? Really? Each .syx I've found has had different numbers
+		/*
 		switch( frameCount ) {
-			case 128: 	ar.push(0x19); break;
-			default:	ar.push(0x64); break;
+			case 128: 	ar.push(0x10, 0x19); break;
+			case 256:	ar.push(0x64, 0x10); break;
+			default:	ar.push(0x10, 0x64); break;
 		}
-		ar = ar.concat( [0x60,0x0,0x0] );
+		*/
+		ar.push( 0x64, 0x10 );
+		
+		ar.push( 0x60, 0x0, 0x0 );
 		for( i=0; i<ar.length; i++ ) {
 			ba.writeByte( ar[i] );
 		}
@@ -79,7 +86,11 @@ public class SyxSaver extends Object
 		if( frameCount==128 ) {
 			ba.writeByte( 0x0 );
 			ba.writeByte( 0x7f );
-		} else if( frameCount==512 ) {
+		} else if( frameCount==256 ) {
+			// Is this right?
+			ba.writeByte( 0x01 );
+			ba.writeByte( 0x7f );
+		} else {//if( frameCount==512 ) {
 			ba.writeByte( 0x03 );
 			ba.writeByte( 0x78 );
 		}

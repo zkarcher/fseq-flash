@@ -30,8 +30,8 @@ public class OperatorFrame extends Object
 		// The frequencies probably aren't perfect yet.
 		//return Math.pow( 2.0, (14.302 - (0.001879 * (0x3fff - syx))) );
 		
-		// Inferred from RndArp1, there's a high note that is 1 octave above a lower root note.
-		// Pitches are approx. 13040, 13554. It's probably 512 steps per octave, then?
+		// Inferred from RndArp1.syx. There's a high note that is 1 octave above a lower root note.
+		// The syx freq numbers are approx. 13040, 13554. It's probably 512 steps per octave, then?
 		return Math.pow( 2.0, (HIGHEST_FREQ_EXP - ((1.0/512.0) * (0x3fff-syx))) );
 	}
 	
