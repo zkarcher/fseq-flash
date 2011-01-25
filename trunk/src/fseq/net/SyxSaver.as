@@ -138,7 +138,7 @@ public class SyxSaver extends Object
 		}
 		
 		ba.position = lastPos;
-		ba.writeByte( check ^ 0x7f );	// This is the checksum. When added to the other bytes, will yield 0x0 in lowest 7 bits.
+		ba.writeByte( 0x80 - (check&0x7f) );	// This is the checksum. When added to the other bytes, will yield 0x0 in lowest 7 bits.
 		ba.writeByte( 0xf7 );	// Done!
 		
 		var file:FileReference = new FileReference();
