@@ -58,8 +58,8 @@ public class OperatorFrame extends Object
 	}
 	public function ampToSyx() :int {
 		// Calculate the number of 6db drops using a log function.
-		// Subtract 1 because an amplitude of 1.0 should become zero log drops in amplitude.
-		var logDrops:Number = (1.0 / Math.max( amp, 0.000001 )) - 1.0;	// no divide by zero
+		// 1.0amp => 0 log drops.
+		var logDrops:Number = Num.lg( 1.0 / Math.max(0.000001,amp) );	// no divide by zero
 		return int( Math.max( 0x0, Math.min( 0x7f, (logDrops * AMP_STEPS_PER_6DB) )));	 // sane values only plz
 	}
 	
