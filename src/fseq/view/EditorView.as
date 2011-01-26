@@ -74,6 +74,18 @@ public class EditorView extends Sprite
 		var f:Boolean = false;
 		setEditableOps( f, [t,t,t,t, t,t,t,t], [t,t,t,t, t,t,t,t] );
 		
+		_toolButtons = new Vector.<ToolButtonView>();
+		var atX:Number = 10;
+		for each( var str:String in Const.ALL_TOOLS ) {
+			var tool:ToolButtonView = new ToolButtonView( str );
+			tool.addEventListener( MouseEvent.CLICK, toolClick, false, 0, true );
+			tool.x = atX;
+			tool.y = -30;
+			atX += tool.width + 10;
+			addChild( tool );
+			_toolButtons.push( tool );
+		}
+		hiliteToolButton( _toolButtons[0] );
 	}
 	
 	//--------------------------------------
@@ -85,6 +97,7 @@ public class EditorView extends Sprite
 	private var _freqView :GraphView;
 	
 	private var _opButtons :Vector.<OperatorButtonView>;
+	private var _toolButtons :Vector.<ToolButtonView>;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -154,6 +167,10 @@ public class EditorView extends Sprite
 		}
 	}
 	
+	private function toolClick( e:MouseEvent ) :void {
+		hiliteToolButton( ToolButtonView(e.currentTarget) );
+	}
+	
 	//--------------------------------------
 	//  PRIVATE & PROTECTED INSTANCE METHODS
 	//--------------------------------------
@@ -166,6 +183,12 @@ public class EditorView extends Sprite
 	private function redrawAllGraphs() :void {
 		//_ampView.redraw( activeSequence );
 		_freqView.redrawAll();
+	}
+	
+	private function hiliteToolButton( tb:ToolButtonView ) :void {
+		for each( var oneTB:ToolButtonView in _toolButtons ) {
+			oneTB.hilite = (oneTB == tb);
+		}
 	}
 }
 
