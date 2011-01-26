@@ -28,11 +28,7 @@ public class OperatorView extends Sprite
 	// CLASS CONSTANTS
 	//--------------------------------------
 	private static const MAX_CIRC_RADIUS :Number = 8;
-	private static const NOISE_WIDTH :int = 256;
-	private static const NOISE_HEIGHT :int = 100;
-	private static const MIN_NOISE_DISPLAY_HEIGHT :Number = 4;
-	private static const CYCLE_INCREMENT :Number = 0.06;
-	private static const NOISE_BRIGHTNESS :Number = 2.0;
+	private static const NOISE_VARIATIONS :int = 10;
 	
 	//--------------------------------------
 	//  CONSTRUCTOR
@@ -47,15 +43,6 @@ public class OperatorView extends Sprite
 		var bData:BitmapData;
 		var shp:Shape;
 		
-		// All operators are represented as a chain of shapes, with dots at their centers
-		_dotData = new BitmapData( 1, 1, false, Const.color( Const.VOICED_DOT ) );
-		_dots = new Vector.<Bitmap>( Const.FRAMES, true );
-		for( i=0; i<Const.FRAMES; i++ ) {
-			_dots[i] = new Bitmap( _dotData, PixelSnapping.ALWAYS, false );
-			_dots[i].x = i*Const.GRAPH_SCALE_X;
-			addChild( _dots[i] );
-		}		
-		
 		switch( _type ) {
 			case Const.VOICED:				
 				_circData = new Vector.<BitmapData>();
@@ -69,15 +56,24 @@ public class OperatorView extends Sprite
 					}
 					bData.draw( shp );
 					_circData.push( bData );
+					_circSizes++;
 				}
 				
 				// Now that our bitmap data(s) are ready, create all the Bitmaps for the operator
 				_circs = new Vector.<Bitmap>( Const.FRAMES, true );
 				for( i=0; i<Const.FRAMES; i++ ) {
-					_circs[i] = new Bitmap( _circData[2], PixelSnapping.ALWAYS, false );
+					_circs[i] = new Bitmap( _circData[0], PixelSnapping.ALWAYS, false );
 					_circs[i].x = i*Const.GRAPH_SCALE_X - (MAX_CIRC_RADIUS-1);
-					addChildAt( _circs[i], 0 );
+					addChild( _circs[i] );
 				}
+				
+				_dotData = new BitmapData( 1, 1, false, Const.color( Const.VOICED_DOT ) );
+				_dots = new Vector.<Bitmap>( Const.FRAMES, true );
+				for( i=0; i<Const.FRAMES; i++ ) {
+					_dots[i] = new Bitmap( _dotData, PixelSnapping.ALWAYS, false );
+					_dots[i].x = i*Const.GRAPH_SCALE_X;
+					addChild( _dots[i] );
+				}		
 				
 				// The circles will overlap, so render as a single layer (looks better when dimmed)
 				blendMode = BlendMode.LAYER;
@@ -85,32 +81,43 @@ public class OperatorView extends Sprite
 				break;
 
 			case Const.UNVOICED:
-				if( !_noise ) {
-					_noise = new BitmapData( NOISE_WIDTH, NOISE_HEIGHT, false, 0xffff00 );
-					var now:Date = new Date();
-					//_noise.noise( int(now.time), 0, 255 );	// plain noise is kinda dull
-					_noise.perlinNoise( 4, 4, 3, int(now.time), true, false );
+				_circData = new Vector.<BitmapData>();
+				for( i=0; i<MAX_CIRC_RADIUS-2; i++ ) {
+					var basicCircle:BitmapData = new BitmapData( i*2+3, i*2+3, true, 0x0 );
+					shp = new Shape();
+					with( shp.graphics ) {
+						beginFill( color, 1.0 );
+						drawCircle( basicCircle.width/2, basicCircle.height/2, i+1.5 );
+						endFill();
+					}
+					basicCircle.draw( shp );
+					
+					// Don't tint everything 100%, let some of the noise leak through
+					var rgb:Object = ColorUtil.rgb( color );
+					var xform:ColorTransform = new ColorTransform( rgb.r/255,rgb.g/255,rgb.b/255,1, 0,0,0,0 );
+					
+					for( var v:int=0; v<NOISE_VARIATIONS; v++ ) {
+						bData = new BitmapData( basicCircle.width, basicCircle.height, true, 0xff000000 );
+						bData.noise( Rand.int(int.MAX_VALUE), 0, 255, 15, true );
+						bData.colorTransform( bData.rect, xform );
+						// circular cutout:
+						//bData.copyChannel( basicCircle, bData.rect, new Point(0,0), BitmapDataChannel.ALPHA, BitmapDataChannel.ALPHA );
+						_circData.push( bData );
+					}
+					
+					_circSizes++;
 				}
-				
-				_bandSpr = new Sprite();
-				addChild( _bandSpr );
-				
-				_bands = new Vector.<Bitmap>( Const.FRAMES, true );
+
+				// Now that our bitmap data(s) are ready, create all the Bitmaps for the operator
+				_circs = new Vector.<Bitmap>( Const.FRAMES, true );
 				for( i=0; i<Const.FRAMES; i++ ) {
-					bData = new BitmapData( Math.ceil(Const.GRAPH_SCALE_X), NOISE_HEIGHT, false, 0x0 );
-					var bmp:Bitmap = new Bitmap( bData, PixelSnapping.ALWAYS, false );
-					bmp.x = i * Const.GRAPH_SCALE_X;
-					_bandSpr.addChild( bmp );
-					
-					// Draw the noise layer
-					var mtx:Matrix = new Matrix();
-					mtx.translate( -((Const.GRAPH_SCALE_X * i) % NOISE_WIDTH), 0 );
-					bData.draw( _noise, mtx );
-					
-					_bands[i] = bmp;
+					_circs[i] = new Bitmap( _circData[0], PixelSnapping.ALWAYS, false );
+					_circs[i].x = i*Const.GRAPH_SCALE_X - (MAX_CIRC_RADIUS-1);
+					addChild( _circs[i] );
 				}
 				
-				addEventListener( Event.ENTER_FRAME, enterFrame, false, 0, true );
+				// The circles will overlap, so render as a single layer (looks better when dimmed)
+				blendMode = BlendMode.LAYER;
 				
 				break;
 		}
@@ -125,16 +132,11 @@ public class OperatorView extends Sprite
 	private var _isEditable :Boolean;
 	
 	// Voiced paint splotches
+	private var _circSizes :int = 0;
 	private var _circData :Vector.<BitmapData>;
 	private var _circs :Vector.<Bitmap>;
 	private var _dotData :BitmapData;
 	private var _dots :Vector.<Bitmap>;
-	
-	// Unvoiced color-cycling noise
-	private static var _noise :BitmapData;
-	private var _bandSpr :Sprite;
-	private var _bands :Vector.<Bitmap>;
-	private var _cycle :Number = 0;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -185,41 +187,36 @@ public class OperatorView extends Sprite
 		
 		switch( _type ) {
 			case Const.VOICED:
-				operator = fseq.voiced(_id);
+			case Const.UNVOICED:
+				operator = (_type==Const.VOICED) ? fseq.voiced(_id) : fseq.unvoiced(_id);
 
 				for( f=leftFrame; f<=rightFrame; f++ ) {
 					atX = f * Const.GRAPH_SCALE_X;
 					atY = yAtFrame(fseq, f);
-					_dots[f].y = atY;
-
+					if( _type == Const.VOICED ) {
+						_dots[f].y = atY;
+					}
+					
 					// Change the circle size, if necessary.
 					// Louder frames have larger circles.
 					var amp:Number = operator.frame(f).amp;
 					var ampCompare :Number = 0.5;
-					var circId:int = _circData.length-1;
+					var circId:int = _circSizes-1;
 					while( circId > 0 && amp < ampCompare ) {
 						ampCompare *= 0.5;
 						circId--;
 					}
+					
+					// Unvoiced has many noise variations to choose from
+					if( _type == Const.UNVOICED ) {
+						circId *= NOISE_VARIATIONS;
+						circId += Rand.int( NOISE_VARIATIONS );
+					}
+					
 					_circs[f].bitmapData = _circData[circId];
 					
 					_circs[f].x = atX - _circs[f].bitmapData.width / 2;
 					_circs[f].y = atY - _circs[f].bitmapData.height / 2;
-				}
-				break;
-			
-			case Const.UNVOICED:
-				operator = fseq.unvoiced(_id);
-				
-				for( f=leftFrame; f<=rightFrame; f++ ) {
-					atX = f * Const.GRAPH_SCALE_X;
-					atHeight = Num.interpolate( MIN_NOISE_DISPLAY_HEIGHT, NOISE_HEIGHT, operatorInSequence(fseq).frame(f).amp );
-					atY = yAtFrame(fseq, f);	// this is the y center of our bitmap
-					
-					with( _bands[f] ) {
-						scrollRect = new Rectangle( 0, (NOISE_HEIGHT-atHeight)/2, Math.ceil(Const.GRAPH_SCALE_X), atHeight );
-						y = atY - atHeight/2;
-					}
 				}
 				break;
 			
@@ -230,36 +227,6 @@ public class OperatorView extends Sprite
 	//--------------------------------------
 	//  EVENT HANDLERS
 	//--------------------------------------
-	private function enterFrame( e:Event ) :void {
-		if( _type == Const.UNVOICED ) {
-			_cycle += CYCLE_INCREMENT;
-			var color:uint = Const.color( _type, _id );
-			var rgb:Object = ColorUtil.rgb( color );
-			
-			// Start with a cmt matrix that only preserves the alpha
-			var mtx:Array = [	0,0,0,0,0, 
-								0,0,0,0,0, 
-								0,0,0,0,0, 
-								0,0,0,1,0	];
-			
-			var cyclePhase:Number = _cycle % 3.0;
-			// channels: 0=red, 1=green, 2=blue
-			var fromChannel:int = Math.floor( cyclePhase );
-			var toChannel:int = (fromChannel+1) % 3;
-			
-			var fadePhase:Number = _cycle % 1.0;
-			var fadeOut :Number = (1-fadePhase)*NOISE_BRIGHTNESS;
-			var fadeIn :Number = fadePhase*NOISE_BRIGHTNESS;
-			mtx[ fromChannel ] = fadeOut * rgb.r/255;
-			mtx[ fromChannel+5 ] = fadeOut * rgb.g/255;
-			mtx[ fromChannel+10 ] = fadeOut * rgb.b/255;
-			mtx[ toChannel ] = fadeIn * rgb.r/255;
-			mtx[ toChannel+5 ] = fadeIn * rgb.g/255;
-			mtx[ toChannel+10 ] = fadeIn * rgb.b/255;
-			
-			_bandSpr.filters = [new ColorMatrixFilter(mtx)];
-		}
-	}
 	
 	//--------------------------------------
 	//  PRIVATE & PROTECTED INSTANCE METHODS

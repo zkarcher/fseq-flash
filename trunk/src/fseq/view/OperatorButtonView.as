@@ -39,6 +39,25 @@ public class OperatorButtonView extends Sprite
 		ColorUtil.multiply( _mc, Const.color( _type, _id ) );
 		addChild( _mc );
 		
+		if( _type == Const.UNVOICED ) {
+			// Brighter button art so the noise doesn't darken it
+			var rgb:Object = ColorUtil.rgb(Const.color(_type,_id));
+			_mc.transform.colorTransform = new ColorTransform( 
+				rgb.r/255*1.3, rgb.g/255*1.3, rgb.b/255*1.3, 1, 
+				0,0,0,0
+			);
+			
+			var bData:BitmapData = new BitmapData( _mc.width-16, _mc.height-16, false, 0x0 );
+			bData.perlinNoise( 5, 5, 2, inId, false, false, 7, true );
+			bData.colorTransform( bData.rect, new ColorTransform(4,4,4,4, 0,0,0,0));	// high contrast
+			
+			var noise:Bitmap = new Bitmap( bData, PixelSnapping.ALWAYS, false );
+			noise.x = noise.y = 8;
+			noise.blendMode = BlendMode.MULTIPLY;
+			noise.alpha = 1.0;
+			addChild( noise );
+		}
+		
 		isOn = true;
 	}
 	

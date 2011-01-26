@@ -2,6 +2,7 @@ package fseq.model
 {
 
 import com.zacharcher.color.*;
+import com.zacharcher.math.*;
 
 public class Const extends Object
 {
@@ -38,32 +39,45 @@ public class Const extends Object
 	public static const VOICED_DOT :String = "VOICED_DOT";
 	public static const INACTIVE_BRIGHTNESS :Number = 0.4;
 	
+	// Editor tools
+	public static const FREEHAND :String = "freehand";
+	public static const LINE :String = "line";
+	public static const TRANSPOSE :String = "transpose";
+	public static const VOWEL :String = "vowel";
+	public static const ALL_TOOLS :Array = [FREEHAND,LINE,TRANSPOSE,VOWEL];
+	
+	
 	public function Const()
 	{
 		super();
 	}
 	
 	public static function color( type:String, id:int=0 ) :uint {
+		var rgb:Object;
+		
 		switch( type ) {
 			case Const.PITCH:
 				return 0xffffff;
 			
 			case Const.VOICED:
-			case Const.UNVOICED:
 				return [0xff4801,0xfe1d16,0xfe1f72,0xfd2096,0xf626ff,0xc749ff,0x9350ff,0x6b78ff][id];
 				
 			case Const.VOICED_DOT:
 				var blend:uint = color( Const.VOICED, id );
-				var rgb:Object = ColorUtil.rgb( blend );
+				rgb = ColorUtil.rgb( blend );
 				rgb.r = (rgb.r + 0xff) / 2;
 				rgb.g = (rgb.g + 0xff) / 2;
 				rgb.b = (rgb.b + 0xff) / 2;
 				return (rgb.r << 16) | (rgb.g << 8) | rgb.b;
 			
-			/*	
 			case Const.UNVOICED:
-				return [0x00feed,0x00f6c0,0x00ec86,0x00db40,0x08c827,0x1cb827,0x459b34,0x787a52][id];
-				*/
+				//return [0x00feed,0x00f6c0,0x00ec86,0x00db40,0x08c827,0x1cb827,0x459b34,0x787a52][id];	// green -> grey
+				rgb = ColorUtil.rgb( Const.color(VOICED, id) );
+				var grey:Number = 0.25;
+				rgb.r = Num.interpolate( 255*grey, 255*(1-grey), rgb.r/255 );
+				rgb.g = Num.interpolate( 255*grey, 255*(1-grey), rgb.g/255 );
+				rgb.b = Num.interpolate( 255*grey, 255*(1-grey), rgb.b/255 );
+				return (int(rgb.r)<<16) + (int(rgb.g)<<8) + int(rgb.b);
 		}
 		trace("** SequenceView: What weird color are you looking for? I only accept", Const.PITCH, Const.VOICED, Const.UNVOICED, "...", type, id);
 		return 0x444444;
