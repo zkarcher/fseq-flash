@@ -306,11 +306,6 @@ public class AppController extends Sprite
 	
 	private function fseqComplete( e:CustomEvent ) :void {
 		var seq:FormantSequence = _syxLoader.formantSequence;
-		/*
-		_seqView = new SequenceView( Const.FREQ, _seq );
-		_seqView.addEventListener( MouseEvent.CLICK, sequenceClickHandler, false, 0, true );
-		addChildAt( _seqView, 0 );
-		*/
 		_editorView.pushSequence( seq );
 		
 		if( _player ) {

@@ -123,6 +123,10 @@ public class OperatorView extends Sprite
 		}
 	}
 	
+	public function destroy() :void {
+		if( parent ) parent.removeChild( this );
+	}
+	
 	//--------------------------------------
 	//  PRIVATE VARIABLES
 	//--------------------------------------

@@ -104,6 +104,7 @@ public class AudioImportView extends Sprite
 	private var _fseq :FormantSequence;
 	private var _pitchDetector :PitchDetector;
 	private var _formantDetector :FormantDetector;
+	private var _opViews :Vector.<OperatorView>;
 	
 	// Buttons
 	private var _skip :BasicButton;
@@ -184,6 +185,8 @@ public class AudioImportView extends Sprite
 			}
 			
 		} else if( _pitchDetector && !_pitchDetector.isComplete ) {
+			hideFseqView();
+			
 			// Process as many audio frames as possible within one visual frame in Flash
 			time = 0;
 			for( i=0; i<Const.FRAMES; i++ ) {
@@ -206,6 +209,7 @@ public class AudioImportView extends Sprite
 
 		} else if( !_formantDetector ) {
 			if( _skip && _skip.parent ) _skip.parent.removeChild( _skip );
+			hideFseqView();
 			
 			//
 			// FORMANT DETECTION
@@ -250,8 +254,11 @@ public class AudioImportView extends Sprite
 			// FSEQ is ready?
 			if( _ok ) {
 			 	if( !_ok.parent && fseqIsReady ) {
+					showFseqView();
 					addChild( _ok );
+					
 				} else if( _ok.parent && !fseqIsReady ) {
+					hideFseqView();
 					_ok.parent.removeChild( _ok );
 				}
 			}
@@ -288,10 +295,40 @@ public class AudioImportView extends Sprite
 		_progBar.y = _spectrumView.y;
 		addChild( _progBar );
 	}
+	
 	private function hideProgBar() :void {
-		if( _progBar && _progBar.parent ) {
-			_progBar.parent.removeChild( _progBar );
+		if( _progBar && _progBar.parent ) _progBar.parent.removeChild( _progBar );
+	}
+	
+	private function showFseqView() :void {
+		var rect:Rectangle = new Rectangle( 0, 0, _spectrumView.width, _spectrumView.height );
+		_opViews = new Vector.<OperatorView>();
+		var i:int;
+		for( i=0; i<Const.VOICED_OPS; i++ ) {
+			_opViews.push( new OperatorView( Const.VOICED, i, rect ));
 		}
+		for( i=0; i<Const.UNVOICED_OPS; i++ ) {
+			_opViews.unshift( new OperatorView( Const.UNVOICED, i, rect ));	// draw noise ops under the pitched ops
+		}
+		
+		// Add all the opViews to the canvas
+		for each( var opView:OperatorView in _opViews ) {
+			opView.scrollRect = rect;
+			opView.redraw( _fseq, 0, Const.FRAMES-1 );
+			opView.x = _spectrumView.x;
+			opView.y = _spectrumView.y;
+			opView.alpha = 0.7;
+			addChild( opView );
+		}
+	}
+	
+	private function hideFseqView() :void {
+		if( _opViews ) {
+			for each( var opView:OperatorView in _opViews ) {
+				opView.destroy();
+			}
+		}
+		_opViews = null;
 	}
 }
 
