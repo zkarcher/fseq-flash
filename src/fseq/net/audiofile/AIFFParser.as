@@ -31,8 +31,8 @@ public class AIFFParser extends BaseParser
 	//--------------------------------------
 	//  CONSTRUCTOR
 	//--------------------------------------
-	public function AIFFParser( inBa:ByteArray ) {
-		super( inBa );
+	public function AIFFParser() {
+		super();
 	}
 	
 	//--------------------------------------
@@ -64,6 +64,21 @@ public class AIFFParser extends BaseParser
 			var chunkId:String = ba.readUTFBytes(4);	// 4 byte string
 			var chunkSize:uint = ba.readUnsignedInt();	// 32-bit
 			switch( chunkId ) {
+				case "FORM":
+					var aiffCode:String = ba.readUTFBytes(4);
+					if( aiffCode != "AIFF" && aiffCode != "AIFC" ) {
+						// Then it's the file size
+						ba.position -= 4;
+						var fileSize:uint = ba.readUnsignedInt();
+						aiffCode = ba.readUTFBytes(4);
+						if( aiffCode != "AIFF" && aiffCode != "AIFC" ) {
+							// Still not an AIFF? Then error out
+							_error = "FORM does not precede AIFF: "+aiffCode;
+							return false;
+						}
+					}
+					break;
+				
 				case "COMM":
 					if( chunkSize != 18 ) {
 						_error = "COMM chunk is not size 18: " + chunkSize.toString();
@@ -96,6 +111,7 @@ public class AIFFParser extends BaseParser
 					var blockSize:uint = ba.readUnsignedInt();	// 32-bit
 					_sampleDataStart = ba.position + offset;
 					trace("Sample data starts at:", _sampleDataStart);
+					ba.position += chunkSize;	// Skip to the next chunk
 					
 					break;
 					
