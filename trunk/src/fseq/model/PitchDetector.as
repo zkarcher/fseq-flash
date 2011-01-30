@@ -27,7 +27,7 @@ public class PitchDetector extends Object
 	//--------------------------------------
 	// CLASS CONSTANTS
 	//--------------------------------------
-	private static const DEBUG :Boolean = true;
+	private static const DEBUG :Boolean = false;
 	
 	//--------------------------------------
 	//  CONSTRUCTOR
@@ -84,7 +84,7 @@ public class PitchDetector extends Object
 		var combHigh:int = Math.ceil( Const.SAMPLE_RATE / _upperLimit );
 		for( var comb:int=combLow; comb>=combHigh; comb-- ) {
 			var power:Number = 0;
-			for( var w:int=0; w<windowWidth; w++ ) {
+			for( var w:int=0; w<comb; w++ ) {
 				power += samps[w] * samps[w+comb];
 			}
 			
