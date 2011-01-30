@@ -1,4 +1,4 @@
-package fseq.net.audiofile {
+package fseq.view {
 
 /**
  *	Class description.
@@ -13,7 +13,6 @@ package fseq.net.audiofile {
 import flash.display.*;
 import flash.events.*;
 import flash.geom.*;
-import flash.utils.*;
 import caurina.transitions.Tweener;
 import com.zacharcher.color.*;
 import com.zacharcher.math.*;
@@ -22,7 +21,7 @@ import fseq.events.*;
 import fseq.model.*;
 import fseq.view.*;
 
-public class BaseParser extends Object
+public class SpectralAnalysisView extends Sprite
 {
 	//--------------------------------------
 	// CLASS CONSTANTS
@@ -31,45 +30,33 @@ public class BaseParser extends Object
 	//--------------------------------------
 	//  CONSTRUCTOR
 	//--------------------------------------
-	public function BaseParser() {
+	public function SpectralAnalysisView( analysis:SpectralAnalysis ) {
+		var bData:BitmapData = new BitmapData( Const.FRAMES, Const.FFT_BINS, false, 0x0 );
+		
+		for( var i:int=0; i<Const.FRAMES; i++ ) {
+			var frame:Vector.<Number> = analysis.frame(i);
+			for( var j:int=0; j<frame.length; j++ ) {
+				var color:uint = int( Math.min(1.0,frame[j])*255 ) << 8;	// green (max will be 0x00ff00)
+				bData.setPixel( i, bData.height-(j+1), color );
+			}
+		}
+		
+		var bmp:Bitmap = new Bitmap( bData, PixelSnapping.ALWAYS, false );
+		bmp.scaleX = Const.GRAPH_SCALE_X;
+		addChild( bmp );
 	}
 	
 	//--------------------------------------
 	//  PRIVATE VARIABLES
 	//--------------------------------------
-	protected var _ba :ByteArray;
-	protected var _isParsed :Boolean = false;
-	protected var _error :String;	// only set if parse failed
-
-	// The number of frames (samples) in the sound
-	protected var _frameCount :int = 0;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
 	//--------------------------------------
-	public function get isParsed() :Boolean { return _isParsed; }
-	public function get error() :String { return _error; }
 	
 	//--------------------------------------
 	//  PUBLIC METHODS
 	//--------------------------------------
-	
-	// Return true if parse succeeds, false otherwise
-	public function parse( ba:ByteArray ) :Boolean {
-		// Extend me!
-		return false;
-	}
-	
-	public function getMonoSamples( atFrame:int, count:int ) :Vector.<Number> {
-		// Extend me!
-		return null;
-	}
-	
-	// progress = 0..1
-	public function getMonoSamplesAtProgress( progress:Number, count:int ) :Vector.<Number> {
-		var atFrame:int = Math.round( (_frameCount-count) * progress );
-		return getMonoSamples( atFrame, count );
-	}
 	
 	//--------------------------------------
 	//  EVENT HANDLERS
