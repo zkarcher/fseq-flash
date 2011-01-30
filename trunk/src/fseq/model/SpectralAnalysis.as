@@ -82,16 +82,23 @@ public class SpectralAnalysis extends Object
 				_frames[f][i] *= powerMult;
 			}
 		}
+		
+		_freqs = new Vector.<Number>( _frames.length, true );
+		for( var fq:int=0; fq<_frames.length; fq++ ) {
+			_freqs[fq] = (Const.SAMPLE_RATE / _frames.length) * (fq+1);
+		}
 	}
 	
 	//--------------------------------------
 	//  PRIVATE VARIABLES
 	//--------------------------------------
 	private var _frames :Vector.<Vector.<Number>>;
+	private var _freqs :Vector.<Number>;	// each spectral band corresponds to a certain frequency
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
 	//--------------------------------------
+	public function get freqs() :Vector.<Number> { return _freqs; }
 	
 	//--------------------------------------
 	//  PUBLIC METHODS

@@ -27,6 +27,7 @@ public class PitchDetector extends Object
 	//--------------------------------------
 	// CLASS CONSTANTS
 	//--------------------------------------
+	private static const DEBUG :Boolean = false;
 	
 	//--------------------------------------
 	//  CONSTRUCTOR
@@ -66,6 +67,12 @@ public class PitchDetector extends Object
 	public function detectNext() :Number {
 		var start:Date = new Date();
 		
+		if( DEBUG ) {
+			_pitches[_index] = 110.0;
+			_index++;
+			return 0.0001;
+		}
+		
 		var windowWidth:int = Math.round( Const.SAMPLE_RATE / _lowerLimit );
 		var samps:Vector.<Number> = _parser.getMonoSamplesAtProgress( Number(_index)/Const.FRAMES, windowWidth*2 );		
 		
@@ -88,7 +95,7 @@ public class PitchDetector extends Object
 		}
 		
 		_pitches[_index] = Const.SAMPLE_RATE / bestComb;
-		trace("Pitch:", _index, _pitches[_index]);
+		//trace("Pitch:", _index, _pitches[_index]);
 		
 		_index++;
 		
