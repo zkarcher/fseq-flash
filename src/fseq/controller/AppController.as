@@ -82,20 +82,13 @@ public class AppController extends Sprite
 		_speed.y = 60;
 		addChild( _speed );
 		
-		_sweep = new Shape();
-		with( _sweep.graphics ) {
-			beginFill( 0xffff00, 0.8 );
-			//drawRect( 0, 0, 2, 512 );
-			endFill();
-		}
-		addChild( _sweep );
 		addEventListener( Event.ENTER_FRAME, enterFrameHandler, false, 0, true );
 		
 		//
 		// Buttons
 		//
 		var btnLabels:Array = ["undo","load","save","loadAIFF"];
-		var btnFuncs:Array = [undoClick,loadClick,saveClick,loadAudioClick];
+		var btnFuncs:Array = [undoClick,loadSyxClick,saveSyxClick,loadAudioClick];
 		var count:int = 0;
 		for each( var label:String in btnLabels ) {
 			var btn:BasicButton = new BasicButton( label );
@@ -130,7 +123,6 @@ public class AppController extends Sprite
 	private var _syxLoader :SyxLoader;
 	private var _audioLoader :AudioFileLoader;
 	//private var _seqView :SequenceView;
-	private var _sweep :Shape;
 
 	private var _editorView :EditorView;
 
@@ -157,6 +149,16 @@ public class AppController extends Sprite
 	//--------------------------------------
 	//  EVENT HANDLERS
 	//--------------------------------------
+	private function enterFrameHandler( e:Event ) :void {
+		if( !_player ) {
+			//_sweep.visible = false;
+		} else {
+			//_sweep.visible = true;
+			//_sweep.x = _player.frame;
+		}
+	}
+	
+	// Editor tells audio _player to update its fseq when a change is made:
 	private function activeFseqChanged( e:CustomEvent ) :void {
 		if( _player ) {
 			_player.formantSequence = _editorView.activeSequence;
@@ -186,10 +188,16 @@ public class AppController extends Sprite
 			// Space taggles the audio
 			case ' '.charCodeAt(0):
 				if( !_player ) {
+					// If we're in the middle of an import, then don't play anything
+					if( _import && !_import.fseqIsReady ) {
+						return;
+					}
+					
 					_player = new AudioPlayer();
 					speedChangeHandler();
 					_player.addEventListener( CustomEvent.PLAYING_FRAME, playingFrame );
-					_player.play( _editorView.activeSequence );
+					var activeSeq:FormantSequence = _import ? _import.fseq : _editorView.activeSequence;
+					_player.play( activeSeq );
 				} else {
 					stopAudio();
 				}
@@ -203,6 +211,25 @@ public class AppController extends Sprite
 		}
 	}
 	
+	private function undoClick( e:MouseEvent ) :void {
+		_editorView.undo();
+	}
+	
+	private function playingFrame( e:CustomEvent ) :void {
+		if( _import ) {
+			_import.scanGlow( e.data['frame'] );
+		} else {
+			_editorView.scanGlow( e.data['frame'] );
+		}
+	}
+	
+	private function stopTheSound( e:CustomEvent ) :void {
+		stopAudio();
+	}
+	
+	//
+	// FSEQ PRESETS
+	//
 	private function presetChangeHandler( e:Event=null ) :void {
 		//if( _seqView && _seqView.parent ) _seqView.parent.removeChild( _seqView );
 		/*
@@ -221,28 +248,34 @@ public class AppController extends Sprite
 		
 		_syxLoader = new SyxLoader();
 		_syxLoader.addEventListener( CustomEvent.FSEQ_COMPLETE, fseqComplete, false, 0, true );
-		_syxLoader.addEventListener( CustomEvent.LOAD_FAILED, loadFailed, false, 0, true );
+		_syxLoader.addEventListener( CustomEvent.LOAD_FAILED, loadSyxFailed, false, 0, true );
 		_syxLoader.initWithURL( path );
 	}
 	
-	private function undoClick( e:MouseEvent ) :void {
-		_editorView.undo();
-	}
-	
-	private function loadClick( e:MouseEvent ):void {
+	//
+	// .SYX FILES
+	//
+	private function loadSyxClick( e:MouseEvent ):void {
 		stopAudio();
 		
 		_syxLoader = new SyxLoader();
 		_syxLoader.addEventListener( CustomEvent.FSEQ_COMPLETE, fseqComplete, false, 0, true );
-		_syxLoader.addEventListener( CustomEvent.LOAD_FAILED, loadFailed, false, 0, true );
+		_syxLoader.addEventListener( CustomEvent.LOAD_FAILED, loadSyxFailed, false, 0, true );
 		_syxLoader.loadFile();
 	}
 	
-	private function saveClick( e:MouseEvent ) :void {
+	private function loadSyxFailed( e:CustomEvent ) :void {
+		trace("** Load .syx failed, bawwwwwwwww", e.data['error']);
+	}
+	
+	private function saveSyxClick( e:MouseEvent ) :void {
 		stopAudio();
 		var saver:SyxSaver = new SyxSaver( _editorView.activeSequence, 512 );
 	}
-
+	
+	//
+	// AUDIO FILES: LOAD
+	//
 	private function loadAudioClick( e:MouseEvent ) :void {
 		stopAudio();
 		
@@ -257,16 +290,18 @@ public class AppController extends Sprite
 	private function audioLoadComplete( e:CustomEvent ) :void {
 		_import = new AudioImportView( _audioLoader.parser );
 		_import.addEventListener( CustomEvent.FSEQ_COMPLETE, importFseqComplete, false, 0, true );
+		_import.addEventListener( CustomEvent.STOP_THE_SOUND, stopTheSound, false, 0, true );
+		_import.addEventListener( CustomEvent.CANCEL, importCancel, false, 0, true );
 		addChild( _import );
 	}
 	private function importFseqComplete( e:CustomEvent ) :void {
 		_editorView.pushSequence( _import.fseq );
-		_import.destroy();
+		_import.teardown();
 		_import = null;
 	}
-	
-	private function loadFailed( e:CustomEvent ) :void {
-		trace("** Load failed, bawwwwwwwww", e.data['error']);
+	private function importCancel( e:CustomEvent ) :void {
+		_import.teardown();
+		_import = null;
 	}
 	
 	private function fseqComplete( e:CustomEvent ) :void {
@@ -281,19 +316,6 @@ public class AppController extends Sprite
 		if( _player ) {
 			_player.play( _editorView.activeSequence );
 		}
-	}
-	
-	private function enterFrameHandler( e:Event ) :void {
-		if( !_player ) {
-			_sweep.visible = false;
-		} else {
-			_sweep.visible = true;
-			_sweep.x = _player.frame;
-		}
-	}
-	
-	private function playingFrame( e:CustomEvent ) :void {
-		_editorView.scanGlow( e.data['frame'] );
 	}
 	
 	//--------------------------------------

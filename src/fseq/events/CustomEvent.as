@@ -8,9 +8,11 @@ public class CustomEvent extends Event
 	public static const LOAD_COMPLETE :String = "LOAD_COMPLETE";
 	public static const LOAD_FAILED :String = "LOAD_FAILED";
 	public static const FSEQ_COMPLETE :String = "FSEQ_COMPLETE";
+	public static const CANCEL :String = "CANCEL";
 	
 	// Audio playback
 	public static const PLAYING_FRAME :String = "PLAYING_FRAME";
+	public static const STOP_THE_SOUND :String = "STOP_THE_SOUND";
 	
 	// Editing
 	public static const EDIT_START :String = "EDIT_START";

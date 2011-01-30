@@ -65,6 +65,8 @@ public class PitchDetector extends Object
 	// Using time domain pitch detection (autocorrelation) for now.
 	// Returns the amount of time required for this detection step.
 	public function detectNext() :Number {
+		if( isComplete ) return 0;
+		
 		var start:Date = new Date();
 		
 		if( DEBUG ) {
@@ -104,6 +106,19 @@ public class PitchDetector extends Object
 		
 		var end:Date = new Date();
 		return (end.time - start.time) * (1.0/1000);	// Convert milliseconds to seconds
+	}
+	
+	public function skipRemaining() :void {
+		for( var i:int=_index; i<Const.FRAMES; i++ ) {
+			if( _index==0 ) {
+				_pitches[i] = 110.0;
+			} else {
+				// Loop whatever pitches we've already detected
+				_pitches[i] = _pitches[i%_index];
+			}
+		}
+		
+		_index = Const.FRAMES;
 	}
 	
 	//--------------------------------------
