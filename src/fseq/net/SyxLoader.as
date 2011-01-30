@@ -72,11 +72,9 @@ public class SyxLoader extends BaseLoader
 	//--------------------------------------
 	//  PRIVATE & PROTECTED INSTANCE METHODS
 	//--------------------------------------
-	/*
 	protected override function handleLoaderComplete() :void {
 		readByteArray( _urlLoader.data );
 	}
-	*/
 	
 	private function readByteArray( ba:ByteArray ) :void {
 		var i:int;

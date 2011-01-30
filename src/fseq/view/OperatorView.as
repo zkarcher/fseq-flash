@@ -177,9 +177,9 @@ public class OperatorView extends Sprite
 		if( !fseq ) return -1;
 		
 		var operator:Operator = operatorInSequence( fseq );
-		return _rect.height * (1 - operator.frame(f).freq * (1/7000.0));
+		return GraphView.freqToY( _rect.height, operator.frame(f).freq );
 	}
-	
+		
 	public function redraw( fseq:FormantSequence, leftFrame:int, rightFrame:int ) :void {
 		if( !fseq ) return;
 		

@@ -10,9 +10,10 @@ public class Const extends Object
 	public static const SAMPLE_RATE :Number = 44100;
 	public static const BUFFER_SIZE :int = 4096;	// mono size, not stereo, so less than 4096 plz
 	public static const LERP_SAMPLES :Number = 30;	// "Smoothly" transition between pitch/width/etc changes
-	
+
 	// Spectral analysis
-	public static const FFT_BINS :int = 512;
+	public static const FFT_BINS :int = 1024;
+	public static const SPECTRAL_BANDS :int = FFT_BINS/2 - 1;
 	
 	// Fseq parameters
 	public static const FRAMES :int = 512;
@@ -41,6 +42,7 @@ public class Const extends Object
 	public static const GRAPH_FREQ_HEIGHT :Number = 500;
 	public static const VOICED_DOT :String = "VOICED_DOT";
 	public static const INACTIVE_BRIGHTNESS :Number = 0.4;
+	public static const HIGHEST_FREQ_IN_LINEAR_VIEW :Number = 7000.0;
 	
 	// Editor tools
 	public static const FREEHAND :String = "freehand";
