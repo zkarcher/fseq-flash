@@ -63,9 +63,8 @@ public class SpectralAnalysis extends Object
 			var frame:Vector.<Number> = new Vector.<Number>( Const.SPECTRAL_BANDS, true );
 			for( i=0; i<Const.SPECTRAL_BANDS; i++ ) {
 				// Ignore the first & center FFT result bands, they're fq=0 and fq=NyquistFreq.
-				// Fold the real and imaginary results together.
-				var re:Number = real[i+1] + real[real.length-(i+1)];
-				var im:Number = imag[i+1] + imag[imag.length-(i+1)];
+				var re:Number = real[i+1];
+				var im:Number = imag[i+1];
 				
 				var power:Number = Math.sqrt( re*re + im*im );
 				frame[i] = power;
