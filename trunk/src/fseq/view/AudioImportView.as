@@ -58,6 +58,20 @@ public class AudioImportView extends Sprite
 		_label.y = 20;
 		addChild( _label );
 		
+		_skip = new BasicButton("Skip");
+		_skip.addEventListener( MouseEvent.CLICK, skipClick, false, 0, true );
+		_skip.x = 400;
+		_skip.y = 18;
+
+		_ok = new BasicButton("OK!");
+		_ok.addEventListener( MouseEvent.CLICK, okClick, false, 0, true );
+		_cancel = new BasicButton("Cancel");
+		_cancel.addEventListener( MouseEvent.CLICK, cancelClick, false, 0, true );
+		_cancel.x = 180;
+		_ok.x = 30;
+		_ok.y = _cancel.y = 650;
+		addChild( _cancel );
+		
 		// Analyze & display audio 1 frame per step, so Flash doesn't time out :P
 		addEventListener( Event.ENTER_FRAME, enterFrame, false, 0, true );
 	}
@@ -78,9 +92,10 @@ public class AudioImportView extends Sprite
 	//--------------------------------------
 	private var _bg :Shape;
 	private var _progBar :Shape;
-	private var _isWorking :Boolean = true;
+	private var _scan :Bitmap;	// vertical bar sweeps during playback
 	
 	// Steps to import audio:
+	private var _wasReadyLastFrame :Boolean = false;
 	private var _label :CustomTextView;
 	private var _isLabelDirty :Boolean = true;
 	private var _parser :BaseParser;	// contains audio information
@@ -90,14 +105,39 @@ public class AudioImportView extends Sprite
 	private var _pitchDetector :PitchDetector;
 	private var _formantDetector :FormantDetector;
 	
+	// Buttons
+	private var _skip :BasicButton;
+	private var _ok :BasicButton;
+	private var _cancel :BasicButton;
+	
 	//--------------------------------------
 	//  GETTER/SETTERS
 	//--------------------------------------
 	public function get fseq() :FormantSequence { return _fseq; }
-	
+	public function get fseqIsReady() :Boolean {
+		return _parser && _spectrum && _fseq && _pitchDetector && _pitchDetector.isComplete && _formantDetector && _formantDetector.isComplete;
+	}
+		
 	//--------------------------------------
 	//  PUBLIC METHODS
 	//--------------------------------------
+	public function scanGlow( f:int ) :void {
+		if( !_scan && _spectrumView ) {
+			_scan = new Bitmap( new BitmapData( Math.ceil(Const.GRAPH_SCALE_X), _spectrumView.height, false, 0xffff00 ));
+			_scan.y = _spectrumView.y;
+			_scan.alpha = 0.5;
+		}
+		if( _scan ) {
+			addChild( _scan );	// always display on top
+			_scan.x = f * Const.GRAPH_SCALE_X;
+		}
+	}
+	
+	public function teardown() :void {
+		mouseEnabled = mouseChildren = false;
+		removeEventListener( Event.ENTER_FRAME, enterFrame );
+		Tweener.addTween( this, {y:-height, transition:"easeInSine", time:0.4, onComplete:destroy});
+	}
 	
 	//--------------------------------------
 	//  EVENT HANDLERS
@@ -140,6 +180,7 @@ public class AudioImportView extends Sprite
 				_fseq = new FormantSequence();
 				_pitchDetector = new PitchDetector( _parser, 60.0, 220.0 );
 				showProgBar();
+				if( _skip && !_skip.parent ) addChild( _skip );
 			}
 			
 		} else if( _pitchDetector && !_pitchDetector.isComplete ) {
@@ -148,9 +189,11 @@ public class AudioImportView extends Sprite
 			for( i=0; i<Const.FRAMES; i++ ) {
 				time += _pitchDetector.detectNext();
 				if( _pitchDetector.isComplete ) {
+					// Pitch detection is complete!
 					for( f=0; f<Const.FRAMES; f++ ) {
 						_fseq.pitch().frame(f).freq = _pitchDetector.pitchAt(f);
 					}
+					if( _skip && _skip.parent ) _skip.parent.removeChild( _skip );
 					break;
 				}
 				
@@ -162,6 +205,8 @@ public class AudioImportView extends Sprite
 			_isLabelDirty = true;
 
 		} else if( !_formantDetector ) {
+			if( _skip && _skip.parent ) _skip.parent.removeChild( _skip );
+			
 			//
 			// FORMANT DETECTION
 			//
@@ -200,12 +245,36 @@ public class AudioImportView extends Sprite
 			_isLabelDirty = true;
 			
 		} else {
-			// Done!
-			if( _isWorking ) {
-				_isWorking = false;
-				dispatchEvent( new CustomEvent( CustomEvent.FSEQ_COMPLETE ));
+			hideProgBar();
+			
+			// FSEQ is ready?
+			if( _ok ) {
+			 	if( !_ok.parent && fseqIsReady ) {
+					addChild( _ok );
+				} else if( _ok.parent && !fseqIsReady ) {
+					_ok.parent.removeChild( _ok );
+				}
 			}
+			
+			_wasReadyLastFrame = fseqIsReady;
 		}
+	}
+	
+	//
+	// BUTTONS
+	//
+	private function skipClick( e:MouseEvent ) :void {
+		if( _pitchDetector ) {
+			_pitchDetector.skipRemaining();
+		}
+	}
+	
+	private function okClick( e:MouseEvent ) :void {
+		dispatchEvent( new CustomEvent( CustomEvent.FSEQ_COMPLETE ));
+	}
+
+	private function cancelClick( e:MouseEvent ) :void {
+		dispatchEvent( new CustomEvent( CustomEvent.CANCEL ));
 	}
 	
 	//--------------------------------------

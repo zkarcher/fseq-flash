@@ -65,6 +65,8 @@ public class FormantDetector extends Object
 	// Using time domain pitch detection (autocorrelation) for now.
 	// Returns the amount of time required for this detection step.
 	public function detectNext() :Number {
+		if( isComplete ) return 0;
+		
 		var start:Date = new Date();
 		
 		var w:int, i:int, v:int;
