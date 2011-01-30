@@ -100,6 +100,14 @@ public class GraphView extends Sprite
 	//--------------------------------------
 	//  PUBLIC METHODS
 	//--------------------------------------
+	public static function freqToY( useHeight:Number, freq:Number ) :Number {
+		return useHeight * (1-(freq/Const.HIGHEST_FREQ_IN_LINEAR_VIEW));
+	}
+	
+	public static function yToFreq( useHeight:Number, inY:Number ) :Number {
+		return (1-(inY/useHeight)) * Const.HIGHEST_FREQ_IN_LINEAR_VIEW;
+	}
+	
 	public function redrawAll() :void {
 		for each( var opView:OperatorView in _opViews ) {
 			redrawOpView( opView );

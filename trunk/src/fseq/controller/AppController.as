@@ -69,7 +69,6 @@ public class AppController extends Sprite
 		_presets.rowCount = 30;
 		_presets.addEventListener( Event.CHANGE, presetChangeHandler, false, 0, true );
 		addChild( _presets );
-		presetChangeHandler();	// immediately load a sequence
 		
 		_speed = new Slider();
 		_speed.minimum = 0;
@@ -120,6 +119,8 @@ public class AppController extends Sprite
 		
 		stage.addEventListener( KeyboardEvent.KEY_DOWN, keyDownHandler );
 		stage.addEventListener( KeyboardEvent.KEY_UP, keyUpHandler );
+
+		presetChangeHandler();	// immediately load a sequence
 	}
 		
 	//--------------------------------------
@@ -253,7 +254,8 @@ public class AppController extends Sprite
 	}
 	private function audioLoadComplete( e:CustomEvent ) :void {
 		var spec:SpectralAnalysis = new SpectralAnalysis( _audioLoader.parser );
-		var specView:SpectralAnalysisView = new SpectralAnalysisView( spec );
+		var specView:SpectralAnalysisView = new SpectralAnalysisView( spec, new Rectangle(0,0,Const.FRAMES*Const.GRAPH_SCALE_X,Const.GRAPH_FREQ_HEIGHT) );
+		specView.y = _editorView.y;
 		addChild( specView );
 	}
 	
