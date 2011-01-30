@@ -93,23 +93,25 @@ public class AppController extends Sprite
 		addEventListener( Event.ENTER_FRAME, enterFrameHandler, false, 0, true );
 		
 		//
-		// buttons
+		// Buttons
 		//
-		_undo = new BasicButton("undo");
-		_undo.addEventListener( MouseEvent.CLICK, undoClick );
-		addChild( _undo );
-		
-		_load = new BasicButton("load");
-		_load.addEventListener( MouseEvent.CLICK, loadClick );
-		addChild( _load );
-		_load.x = _undo.x + _undo.width + 10;
-		
-		_save = new BasicButton("save");
-		_save.addEventListener( MouseEvent.CLICK, saveClick );
-		addChild( _save );
-		_save.x = _load.x + _load.width + 10;
+		var btnLabels:Array = ["undo","load","save","testAudio"];
+		var btnFuncs:Array = [undoClick,loadClick,saveClick,testAudioClick];
+		var count:int = 0;
+		for each( var label:String in btnLabels ) {
+			var btn:BasicButton = new BasicButton( label );
+			btn.addEventListener( MouseEvent.CLICK, btnFuncs[count] );
+			addChild( btn );
+			btn.x = (btn.width + 10) * count;
+			count++;
+		}
 		
 		addEventListener( Event.ENTER_FRAME, initEnterFrame );
+	}
+	
+	private function testStuff() :void {
+		var loader:AudioFileLoader = new AudioFileLoader();
+		
 	}
 	
 	private function initEnterFrame( e:Event ) :void {
@@ -124,7 +126,8 @@ public class AppController extends Sprite
 	//  PRIVATE VARIABLES
 	//--------------------------------------
 	private var _player :AudioPlayer;
-	private var _loader :SyxLoader;
+	private var _syxLoader :SyxLoader;
+	private var _audioLoader :AudioFileLoader;
 	//private var _seqView :SequenceView;
 	private var _sweep :Shape;
 
@@ -212,10 +215,10 @@ public class AppController extends Sprite
 		var idx:int = Math.max( 0, _presets.selectedIndex );
 		var path:String = Presets.pathToFS1RSequenceId( idx );
 		
-		_loader = new SyxLoader();
-		_loader.addEventListener( CustomEvent.FSEQ_COMPLETE, fseqComplete, false, 0, true );
-		_loader.addEventListener( CustomEvent.LOAD_FAILED, loadFailed, false, 0, true );
-		_loader.initWithURL( path );
+		_syxLoader = new SyxLoader();
+		_syxLoader.addEventListener( CustomEvent.FSEQ_COMPLETE, fseqComplete, false, 0, true );
+		_syxLoader.addEventListener( CustomEvent.LOAD_FAILED, loadFailed, false, 0, true );
+		_syxLoader.initWithURL( path );
 	}
 	
 	private function undoClick( e:MouseEvent ) :void {
@@ -225,16 +228,32 @@ public class AppController extends Sprite
 	private function loadClick( e:MouseEvent ):void {
 		stopAudio();
 		
-		_loader = new SyxLoader();
-		_loader.addEventListener( CustomEvent.FSEQ_COMPLETE, fseqComplete, false, 0, true );
-		_loader.addEventListener( CustomEvent.LOAD_FAILED, loadFailed, false, 0, true );
-		_loader.loadFile();
+		_syxLoader = new SyxLoader();
+		_syxLoader.addEventListener( CustomEvent.FSEQ_COMPLETE, fseqComplete, false, 0, true );
+		_syxLoader.addEventListener( CustomEvent.LOAD_FAILED, loadFailed, false, 0, true );
+		_syxLoader.loadFile();
 	}
 	
 	private function saveClick( e:MouseEvent ) :void {
 		stopAudio();
-		
 		var saver:SyxSaver = new SyxSaver( _editorView.activeSequence, 512 );
+	}
+
+	private function testAudioClick( e:MouseEvent ) :void {
+		stopAudio();
+		
+		
+		_audioLoader = new AudioFileLoader();
+		_audioLoader.addEventListener( CustomEvent.LOAD_FAILED, audioLoadFailed, false, 0, true );
+		_audioLoader.addEventListener( CustomEvent.LOAD_COMPLETE, audioLoadComplete, false, 0, true );
+		_audioLoader.loadFile();
+	}
+	private function audioLoadFailed( e:CustomEvent ) :void {
+		trace("** Audio load failed:", e.data['error']);
+	}
+	private function audioLoadComplete( e:CustomEvent ) :void {
+		var spec:SpectralAnalysis = new SpectralAnalysis( _audioLoader.parser );
+		trace("wheee!");
 	}
 	
 	private function loadFailed( e:CustomEvent ) :void {
@@ -242,7 +261,7 @@ public class AppController extends Sprite
 	}
 	
 	private function fseqComplete( e:CustomEvent ) :void {
-		var seq:FormantSequence = _loader.formantSequence;
+		var seq:FormantSequence = _syxLoader.formantSequence;
 		/*
 		_seqView = new SequenceView( Const.FREQ, _seq );
 		_seqView.addEventListener( MouseEvent.CLICK, sequenceClickHandler, false, 0, true );
@@ -271,6 +290,7 @@ public class AppController extends Sprite
 	//--------------------------------------
 	//  PRIVATE & PROTECTED INSTANCE METHODS
 	//--------------------------------------
+	
 	private function stopAudio() :void {
 		if( !_player ) return;
 		

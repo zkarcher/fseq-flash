@@ -164,6 +164,8 @@ public class OperatorView extends Sprite
 	//  PUBLIC METHODS
 	//--------------------------------------
 	public function operatorInSequence( fseq:FormantSequence ) :Operator {
+		if( !fseq ) return null;
+		
 		switch( _type ) {
 			case Const.VOICED:	return fseq.voiced(_id);
 			case Const.UNVOICED: return fseq.unvoiced(_id);
@@ -172,6 +174,8 @@ public class OperatorView extends Sprite
 	}
 	
 	public function yAtFrame( fseq:FormantSequence, f:int ) :Number {
+		if( !fseq ) return -1;
+		
 		var operator:Operator = operatorInSequence( fseq );
 		return _rect.height * (1 - operator.frame(f).freq * (1/7000.0));
 	}
