@@ -138,6 +138,9 @@ public class AppController extends Sprite
 	private var _presets :ComboBox;
 	private var _speed :Slider;
 	
+	// Audio import
+	private var _import :AudioImportView;
+	
 	// buttons
 	private var _undo :BasicButton;
 	private var _load :BasicButton;
@@ -243,7 +246,6 @@ public class AppController extends Sprite
 	private function loadAudioClick( e:MouseEvent ) :void {
 		stopAudio();
 		
-		
 		_audioLoader = new AudioFileLoader();
 		_audioLoader.addEventListener( CustomEvent.LOAD_FAILED, audioLoadFailed, false, 0, true );
 		_audioLoader.addEventListener( CustomEvent.LOAD_COMPLETE, audioLoadComplete, false, 0, true );
@@ -253,10 +255,8 @@ public class AppController extends Sprite
 		trace("** Audio load failed:", e.data['error']);
 	}
 	private function audioLoadComplete( e:CustomEvent ) :void {
-		var spec:SpectralAnalysis = new SpectralAnalysis( _audioLoader.parser );
-		var specView:SpectralAnalysisView = new SpectralAnalysisView( spec, new Rectangle(0,0,Const.FRAMES*Const.GRAPH_SCALE_X,Const.GRAPH_FREQ_HEIGHT) );
-		specView.y = _editorView.y;
-		addChild( specView );
+		_import = new AudioImportView( _audioLoader.parser );
+		addChild( _import );
 	}
 	
 	private function loadFailed( e:CustomEvent ) :void {
