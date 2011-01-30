@@ -69,20 +69,26 @@ public class AudioImportView extends Sprite
 		resize();
 	}
 	
+	public function destroy() :void {
+		if( parent ) parent.removeChild( this );
+	}
+	
 	//--------------------------------------
 	//  PRIVATE VARIABLES
 	//--------------------------------------
 	private var _bg :Shape;
 	private var _progBar :Shape;
+	private var _isWorking :Boolean = true;
 	
 	// Steps to import audio:
 	private var _label :CustomTextView;
-	private var _labelIsDirty :Boolean = true;
+	private var _isLabelDirty :Boolean = true;
 	private var _parser :BaseParser;	// contains audio information
 	private var _spectrum :SpectralAnalysis;
 	private var _spectrumView :SpectralAnalysisView;
 	private var _fseq :FormantSequence;
 	private var _pitchDetector :PitchDetector;
+	private var _formantDetector :FormantDetector;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -104,57 +110,120 @@ public class AudioImportView extends Sprite
 	}
 	
 	private function enterFrame( e:Event ) :void {
+		var f:int, i:int;
+		var time:Number;
+		
 		if( !_spectrum ) {
-			if( _labelIsDirty ) {
+			//
+			// SPECTRAL ANALYSIS
+			//
+			if( _isLabelDirty ) {
 				_label.text = "Analyzing spectrum...";
-				_labelIsDirty = false;
+				_isLabelDirty = false;
 			} else {
 				_spectrum = new SpectralAnalysis( _parser );
 				_spectrumView = new SpectralAnalysisView( _spectrum, new Rectangle(0,0,Const.FRAMES*Const.GRAPH_SCALE_X,Const.GRAPH_FREQ_HEIGHT) );
 				_spectrumView.x = 30;
 				_spectrumView.y = 100;
 				addChild( _spectrumView );
-				_labelIsDirty = true;
+				_isLabelDirty = true;
 			}
 			
 		} else if( !_fseq ) {
-			if( _labelIsDirty ) {
-				_label.text = "Analyzing pitch...";
-				_labelIsDirty = false;
+			//
+			// PITCH DETECTION
+			//
+			if( _isLabelDirty ) {
+				_label.text = "Detecting pitch...";
+				_isLabelDirty = false;
 			} else {
 				_fseq = new FormantSequence();
-				_pitchDetector = new PitchDetector( _parser, 50.0, 300.0 );
-
-				_progBar.visible = true;
-				_progBar.width = 1;
-				_progBar.height = _spectrumView.height;
-				_progBar.x = _spectrumView.x;
-				_progBar.y = _spectrumView.y;
-				addChild( _progBar );
+				_pitchDetector = new PitchDetector( _parser, 60.0, 220.0 );
+				showProgBar();
 			}
 			
 		} else if( _pitchDetector && !_pitchDetector.isComplete ) {
 			// Process as many audio frames as possible within one visual frame in Flash
-			var time:Number = 0;
-			for( var i:int=0; i<Const.FRAMES; i++ ) {
+			time = 0;
+			for( i=0; i<Const.FRAMES; i++ ) {
 				time += _pitchDetector.detectNext();
 				if( _pitchDetector.isComplete ) {
-					for( var f:int=0; f<Const.FRAMES; f++ ) {
+					for( f=0; f<Const.FRAMES; f++ ) {
 						_fseq.pitch().frame(f).freq = _pitchDetector.pitchAt(f);
 					}
 					break;
 				}
+				
+				// Have we processed more than one visual frame's worth of data?
 				if( time > 1.0/30 ) break;
 			}
 			
 			_progBar.width = (Number(_pitchDetector.index) / Const.FRAMES) * _spectrumView.width;
+			_isLabelDirty = true;
+
+		} else if( !_formantDetector ) {
+			//
+			// FORMANT DETECTION
+			//
+			if( _isLabelDirty ) {
+				_label.text = "Detecting formants...";
+				_isLabelDirty = false;
+			} else {
+				_formantDetector = new FormantDetector( _spectrum );
+				showProgBar();
+			}
+
+		} else if( _formantDetector && !_formantDetector.isComplete ) {
+			time = 0;
+			for( i=0; i<Const.FRAMES; i++ ) {
+				time += _formantDetector.detectNext();
+				if( _formantDetector.isComplete ) {
+					// Finished, so copy the formant data into the fseq.
+					for( f=0; f<Const.FRAMES; f++ ) {
+						for( var op:int=0; op<Const.VOICED_OPS; op++ ) {
+							// Copy all the formant sequence data
+							_fseq.voiced(op).frame(f).amp = _formantDetector.voicedFrame( f, op ).amp;
+							_fseq.voiced(op).frame(f).freq = _formantDetector.voicedFrame( f, op ).freq;
+							_fseq.unvoiced(op).frame(f).amp = _formantDetector.unvoicedFrame( f, op ).amp;
+							_fseq.unvoiced(op).frame(f).freq = _formantDetector.unvoicedFrame( f, op ).freq;
+						}
+					}
+					_fseq.normalize();
+					break;
+				}
+				
+				// Have we processed more than one visual frame's worth of data?
+				if( time > 1.0/30 ) break;
+			}
+			
+			_progBar.width = (Number(_formantDetector.index) / Const.FRAMES) * _spectrumView.width;
+			_isLabelDirty = true;
+			
+		} else {
+			// Done!
+			if( _isWorking ) {
+				_isWorking = false;
+				dispatchEvent( new CustomEvent( CustomEvent.FSEQ_COMPLETE ));
+			}
 		}
 	}
 	
 	//--------------------------------------
 	//  PRIVATE & PROTECTED INSTANCE METHODS
 	//--------------------------------------
-	
+	private function showProgBar() :void {
+		_progBar.visible = true;
+		_progBar.width = 1;
+		_progBar.height = _spectrumView.height;
+		_progBar.x = _spectrumView.x;
+		_progBar.y = _spectrumView.y;
+		addChild( _progBar );
+	}
+	private function hideProgBar() :void {
+		if( _progBar && _progBar.parent ) {
+			_progBar.parent.removeChild( _progBar );
+		}
+	}
 }
 
 }

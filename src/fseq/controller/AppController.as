@@ -256,7 +256,13 @@ public class AppController extends Sprite
 	}
 	private function audioLoadComplete( e:CustomEvent ) :void {
 		_import = new AudioImportView( _audioLoader.parser );
+		_import.addEventListener( CustomEvent.FSEQ_COMPLETE, importFseqComplete, false, 0, true );
 		addChild( _import );
+	}
+	private function importFseqComplete( e:CustomEvent ) :void {
+		_editorView.pushSequence( _import.fseq );
+		_import.destroy();
+		_import = null;
 	}
 	
 	private function loadFailed( e:CustomEvent ) :void {

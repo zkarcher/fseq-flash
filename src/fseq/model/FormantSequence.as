@@ -126,6 +126,34 @@ public class FormantSequence extends Object
 		return out;
 	}
 	
+	public function normalize() :void {
+		var f:int, op:int;
+		var VOperator:Operator, UOperator:Operator;
+		
+		// Find the maximum power
+		var maxAmp:Number = 0;
+		for( op=0; op<Const.VOICED_OPS; op++ ) {
+			VOperator = voiced(op);
+			UOperator = unvoiced(op);
+			for( f=0; f<Const.FRAMES; f++ ) {
+				maxAmp = Math.max( maxAmp, VOperator.frame(f).amp, UOperator.frame(f).amp );
+			}
+		}
+		
+		// Silly optimization: If the max amp is already 1.0, don't normalize ;)
+		if( maxAmp != 1.0 ) {
+			var ampMult:Number = 1.0/maxAmp;
+			for( op=0; op<Const.VOICED_OPS; op++ ) {
+				VOperator = voiced(op);
+				UOperator = unvoiced(op);
+				for( f=0; f<Const.FRAMES; f++ ) {
+					VOperator.frame(f).amp *= ampMult;
+					UOperator.frame(f).amp *= ampMult;
+				}
+			}
+		}
+	}
+	
 	//--------------------------------------
 	//  EVENT HANDLERS
 	//--------------------------------------

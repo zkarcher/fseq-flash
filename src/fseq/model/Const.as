@@ -11,9 +11,11 @@ public class Const extends Object
 	public static const BUFFER_SIZE :int = 4096;	// mono size, not stereo, so less than 4096 plz
 	public static const LERP_SAMPLES :Number = 30;	// "Smoothly" transition between pitch/width/etc changes
 
-	// Spectral analysis
+	// Spectral & formant analysis
 	public static const FFT_BINS :int = 1024;
 	public static const SPECTRAL_BANDS :int = FFT_BINS/2 - 1;
+	public static const FORMANT_DETECT_BANDWIDTH :int = 8;	// Formant detection analyzes this many bands*2-1
+	public static const FORMANT_DETECT_DISALLOW_NEIGHBORS :int = 6;	// Disallow formants being this close together
 	
 	// Fseq parameters
 	public static const FRAMES :int = 512;
