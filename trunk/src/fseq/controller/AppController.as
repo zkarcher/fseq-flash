@@ -94,8 +94,8 @@ public class AppController extends Sprite
 		//
 		// Buttons
 		//
-		var btnLabels:Array = ["undo","load","save","testAudio"];
-		var btnFuncs:Array = [undoClick,loadClick,saveClick,testAudioClick];
+		var btnLabels:Array = ["undo","load","save","loadAIFF"];
+		var btnFuncs:Array = [undoClick,loadClick,saveClick,loadAudioClick];
 		var count:int = 0;
 		for each( var label:String in btnLabels ) {
 			var btn:BasicButton = new BasicButton( label );
@@ -240,7 +240,7 @@ public class AppController extends Sprite
 		var saver:SyxSaver = new SyxSaver( _editorView.activeSequence, 512 );
 	}
 
-	private function testAudioClick( e:MouseEvent ) :void {
+	private function loadAudioClick( e:MouseEvent ) :void {
 		stopAudio();
 		
 		

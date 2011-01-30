@@ -31,6 +31,8 @@ public class SpectralAnalysisView extends Sprite
 	//  CONSTRUCTOR
 	//--------------------------------------
 	public function SpectralAnalysisView( analysis:SpectralAnalysis, rect:Rectangle ) {
+		var i:int;
+		
 		_bData = new BitmapData( Const.FRAMES, rect.height, false, 0x0 );
 		_bmp = new Bitmap( _bData, PixelSnapping.ALWAYS, false );
 		with( _bmp ) {
@@ -52,10 +54,24 @@ public class SpectralAnalysisView extends Sprite
 		rgbs.push( ColorUtil.rgb( colorInts[colorInts.length-1] ));
 		rgbs.push( ColorUtil.rgb( colorInts[colorInts.length-1] )); // And again in case 6.06 (or whatever) sneaks through
 
+		// Pre-compute the yToFreqs
+		var yToFreqs:Vector.<Number> = new Vector.<Number>( Const.SPECTRAL_BANDS, true );
+		for( i=0; i<Const.SPECTRAL_BANDS; i++ ) {
+			yToFreqs[i] = GraphView.yToFreq( rect.height, i );
+		}
+
 		for( var f:int=0; f<Const.FRAMES; f++ ) {
 			var frame:Vector.<Number> = analysis.frame(f);
-			for( var i:int=0; i<frame.length; i++ ) {
-				var power:Number = frame[i] * colorChoices;
+			for( i=0; i<Const.SPECTRAL_BANDS; i++ ) {
+				// Which spectral analysis band are we looking at?
+				var band:Number = (yToFreqs[i] / (Const.SAMPLE_RATE/2)) * (Const.FFT_BINS/2);
+
+				var loPower = (band<1.0) ? 0 : frame[Math.floor(band-1)];	// SpectralAnalysis drops the first FFT bin (fq=0)
+				var hiPower = (Const.SPECTRAL_BANDS<=band) ? 0 : frame[Math.ceil(Math.max(0,band-1))];
+				
+				var power:Number = Num.interpolate( loPower, hiPower, band - Math.floor(band) );
+				power *= colorChoices;
+				
 				var lo:Object = rgbs[ Math.floor(power) ];
 				var hi:Object = rgbs[ Math.ceil(power) ];
 				var progress:Number = power - Math.floor(power);	// decimal portion of the power
@@ -65,23 +81,10 @@ public class SpectralAnalysisView extends Sprite
 				color = (int(Num.interpolate( lo.r, hi.r, progress )) << 16) |
 						(int(Num.interpolate( lo.g, hi.g, progress )) << 8) |
 						int(Num.interpolate( lo.b, hi.b, progress ));
-				_bData.setPixel( f, _bData.height-(i+1), color );
+				_bData.setPixel( f, i, color );
 			}
 		}
-		
-		/*
-		for( var i:int=0; i<Const.FRAMES; i++ ) {
-			var frame:Vector.<Number> = analysis.frame(i);
-			for( var j:int=0; j<frame.length; j++ ) {
-				var color:uint = int( showPower*255 ) << 8;	// green (max will be 0x00ff00)
-				bData.setPixel( i, bData.height-(j+1), color );
-			}
-		}
-		
-		var bmp:Bitmap = new Bitmap( bData, PixelSnapping.ALWAYS, false );
-		bmp.scaleX = Const.GRAPH_SCALE_X;
-		addChild( bmp );
-		*/
+
 	}
 	
 	//--------------------------------------
