@@ -27,7 +27,7 @@ public class PitchDetector extends Object
 	//--------------------------------------
 	// CLASS CONSTANTS
 	//--------------------------------------
-	private static const DEBUG :Boolean = false;
+	private static const DEBUG :Boolean = true;
 	
 	//--------------------------------------
 	//  CONSTRUCTOR
@@ -88,6 +88,9 @@ public class PitchDetector extends Object
 				power += samps[w] * samps[w+comb];
 			}
 			
+			// Try to compensate for octave errors: Multiply by the comb width
+			power *= comb;
+			
 			if( power > bestPower ) {
 				bestPower = power;
 				bestComb = comb;
@@ -95,7 +98,7 @@ public class PitchDetector extends Object
 		}
 		
 		_pitches[_index] = Const.SAMPLE_RATE / bestComb;
-		//trace("Pitch:", _index, _pitches[_index]);
+		trace("Pitch:", _index, _pitches[_index]);
 		
 		_index++;
 		

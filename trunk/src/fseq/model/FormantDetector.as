@@ -27,6 +27,7 @@ public class FormantDetector extends Object
 	//--------------------------------------
 	// CLASS CONSTANTS
 	//--------------------------------------
+	private static const LOWPASS :Boolean = false;
 	
 	//--------------------------------------
 	//  CONSTRUCTOR
@@ -90,13 +91,21 @@ public class FormantDetector extends Object
 				if( band < 0 || frame.length <= band ) continue;	// out of bounds
 
 				var thisPower:Number = frame[band] * window[ Math.abs(w) ];
-				power += thisPower;
-				freqSum += _spectrum.freqs[band] * thisPower;
+				if( LOWPASS ) {
+					power += thisPower / _spectrum.freqs[band];	// compensate for uneven energy across the spectrum
+				} else {
+					power += thisPower;
+					freqSum += _spectrum.freqs[band] * thisPower;
+				}
 			}
 			
 			// We have computed the power and average center frequency for a formant at this frequency:
 			powers[i] = power;
-			avFreqs[i] = freqSum / power;
+			if( LOWPASS ) {
+				avFreqs[i] = _spectrum.freqs[i];	// Boring, no frequency variations
+			} else {
+				avFreqs[i] = freqSum / power;
+			}
 		}
 		
 		// Choosing formants: When a formant is chosen, disallow its neighbars to be picked.
@@ -138,8 +147,10 @@ public class FormantDetector extends Object
 		var unvoicedFrames:Vector.<OperatorFrame> = new Vector.<OperatorFrame>( Const.UNVOICED_OPS, true );
 		for( v=0; v<Const.VOICED_OPS; v++ ) {
 			var idx:int = bestIndexes[v];
-			voicedFrames[v] = new OperatorFrame( powers[idx], avFreqs[idx] );
-			unvoicedFrames[v] = new OperatorFrame( powers[idx]*0.25, avFreqs[idx] );	// TODO: Compute the real power
+			// Why are the highest formants so much louder?? Hmmm
+			voicedFrames[v] = new OperatorFrame( powers[idx] / avFreqs[idx], avFreqs[idx] );
+			// TODO: Compute the real unvoiced power
+			unvoicedFrames[v] = new OperatorFrame( powers[idx]*0.0625 / avFreqs[idx], avFreqs[idx] );
 		}
 		
 		_voiced.push( voicedFrames );
