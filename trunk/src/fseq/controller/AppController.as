@@ -253,7 +253,8 @@ public class AppController extends Sprite
 	}
 	private function audioLoadComplete( e:CustomEvent ) :void {
 		var spec:SpectralAnalysis = new SpectralAnalysis( _audioLoader.parser );
-		trace("wheee!");
+		var specView:SpectralAnalysisView = new SpectralAnalysisView( spec );
+		addChild( specView );
 	}
 	
 	private function loadFailed( e:CustomEvent ) :void {

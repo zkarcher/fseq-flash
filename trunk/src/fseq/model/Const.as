@@ -10,7 +10,10 @@ public class Const extends Object
 	public static const SAMPLE_RATE :Number = 44100;
 	public static const BUFFER_SIZE :int = 4096;	// mono size, not stereo, so less than 4096 plz
 	public static const LERP_SAMPLES :Number = 30;	// "Smoothly" transition between pitch/width/etc changes
-
+	
+	// Spectral analysis
+	public static const FFT_BINS :int = 512;
+	
 	// Fseq parameters
 	public static const FRAMES :int = 512;
 	public static const VOICED_OPS :int = 8;
