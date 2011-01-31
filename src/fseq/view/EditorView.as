@@ -82,7 +82,7 @@ public class EditorView extends Sprite
 			tool.x = atX;
 			tool.y = -30;
 			atX += tool.width + 10;
-			addChild( tool );
+			//addChild( tool );
 			_toolButtons.push( tool );
 		}
 		hiliteToolButton( _toolButtons[0] );
