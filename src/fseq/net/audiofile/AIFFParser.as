@@ -137,7 +137,7 @@ public class AIFFParser extends BaseParser
 					//_error = "Can't parse whatever this chunk is: " + chunkId + " at position " + _ba.position.toString();
 					trace("** I don't know what this chunk is, attempting to skip:", chunkId, _ba.position.toString());
 					_ba.position += chunkSize;
-					return false;
+					break;
 			}
 		}
 		

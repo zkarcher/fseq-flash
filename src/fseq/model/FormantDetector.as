@@ -89,55 +89,52 @@ public class FormantDetector extends Object
 		
 		// At each potential formant frequency, compute the power at that formant
 		for( i=0; i<frame.length; i++ ) {
-			var pitch:Number = _pitch.frame(_index).freq;
-
+			//var pitch:Number = _pitch.frame(_index).freq;
+			
+			/*
 			var VPower:Number = 0;
 			var UPower:Number = 0;
 			var VFreqSum:Number = 0;
 			var UFreqSum:Number = 0;
-			// Apply the windowing function
+			*/
+			
+			var unwindowed:Vector.<Number> = new Vector.<Number>( window.length*2-1, true );
+			var windowed:Vector.<Number> = new Vector.<Number>( window.length*2-1, true );	// windowed spectrum
+			var power:Number = 0;
+			var freqSum:Number = 0;
+			
 			for( w=1-window.length; w<window.length; w++ ) {
 				var band:int = w+i;
-				if( band < 0 || frame.length <= band ) continue;	// out of bounds
 				
-				var bandFreq:Number = _spectrum.freqs[band];
-				
-				var thisPower:Number = frame[band] * window[ Math.abs(w) ];
-				
-				// Split this into voiced & unvoiced energy, depending on how in tune this freq is with our base pitch
-				var harmonic:Number = bandFreq / pitch;
-				// Wrap between 0..1, fold over towards 0
-				var h:Number = Num.wrap( harmonic, 1.0 );
-				if( h > 0.5 ) h = 1-h;	// fold over towards 0
-
-				var VPercent:Number = 0;	// Apply this much of thisPower to VPower, the rest to UPower
-				if( h < Const.PITCHED_REGION_OF_OVERTONE ) {
-					VPercent = (Math.cos( (h/Const.PITCHED_REGION_OF_OVERTONE)*Math.PI ) + 1) / 2;
-				}
-				
-				// Voiced formant results are much better without VPercent applied.
-				VPower += thisPower;// * VPercent;
-				UPower += thisPower * (1-VPercent);
-				VFreqSum += bandFreq * thisPower;//(thisPower * VPercent);
-				UFreqSum += bandFreq * (thisPower * (1-VPercent));
-				
-				/*
-				if( LOWPASS ) {
-					power += thisPower / _spectrum.freqs[band];	// compensate for uneven energy across the spectrum
+				var setIndex:int = w+window.length-1;
+				if( band < 0 || frame.length <= band ) {
+					unwindowed[setIndex] = 0;
+					windowed[setIndex] = 0;
+					continue;
 				} else {
+					var bandFreq:Number = _spectrum.freqs[band];
+					unwindowed[setIndex] = frame[band];
+					var thisPower:Number = frame[band] * window[Math.abs(w)];
+					windowed[setIndex] = thisPower;
 					power += thisPower;
-					freqSum += _spectrum.freqs[band] * thisPower;
+					freqSum += bandFreq * thisPower;
 				}
-				*/
 			}
 			
-			// We have computed the power and average center frequency for a formant at this frequency:
-			VPowers[i] = VPower;
-			// Unvoiced (noise) power will be louder than pitched power, so turn it down!
-			UPowers[i] = UPower;// * Const.PITCHED_REGION_OF_OVERTONE*2;
+			// Pitched formants should have higher band energy / total energy
+			var maxEnergyRatio:Number = 0;
+			for( w=0; w<windowed.length; w++ ) {
+				maxEnergyRatio = Math.max( maxEnergyRatio, unwindowed[w] / power );
+			}
+			// Seems to vary between about 0.15 and 0.30 usually:
+			//trace("Yo, my maxEnergyRatio is", maxEnergyRatio);
 			
-			VFreqs[i] = (VPower > 0) ? (VFreqSum / VPower) : pitch;
-			UFreqs[i] = (UPower > 0) ? (UFreqSum / UPower) : pitch;
+			VFreqs[i] = UFreqs[i] = freqSum / power;
+			
+			// We have computed the power and average center frequency for a formant at this frequency:
+			VPowers[i] = power;// / VFreqs[i];
+			// Unvoiced (noise) power will be louder than pitched power, so turn it down!
+			UPowers[i] = 0;//UPower*0.5;// / UFreqs[i] * 0.5;// * Const.PITCHED_REGION_OF_OVERTONE*2;
 			
 			/*
 			if( LOWPASS ) {
@@ -148,8 +145,7 @@ public class FormantDetector extends Object
 			*/
 		}
 		
-		_voiced.push( pickFormants( Const.VOICED_OPS, VPowers, VFreqs ) );
-		_unvoiced.push( pickFormants( Const.UNVOICED_OPS, UPowers, UFreqs ) );
+		pickAndStoreFormants( Const.VOICED_OPS, VPowers, VFreqs, UPowers, UFreqs, _spectrum.freqs );
 		
 		_index++;
 		
@@ -164,27 +160,29 @@ public class FormantDetector extends Object
 	//--------------------------------------
 	//  PRIVATE & PROTECTED INSTANCE METHODS
 	//--------------------------------------
-	private function pickFormants( count:int, powers:Vector.<Number>, freqs:Vector.<Number> ) :Vector.<OperatorFrame> {
+	private function pickAndStoreFormants( count:int, VPowers:Vector.<Number>, VFreqs:Vector.<Number>, UPowers:Vector.<Number>, UFreqs:Vector.<Number>, bandFreqs:Vector.<Number> ) :void {
 		var v:int, i:int;
 		
 		// Choosing formants: When a formant is chosen, disallow its neighbars to be picked.
-		var okToPick:Vector.<Boolean> = new Vector.<Boolean>( powers.length, true );
-		for( i=0; i<powers.length; i++ ) {
-			okToPick[i] = true;
+		var okToPick:Vector.<Boolean> = new Vector.<Boolean>( VPowers.length, true );
+		for( i=0; i<VPowers.length; i++ ) {
+			okToPick[i] = bandFreqs[i] < Const.IMPORT_HIGHEST_FORMANT_FREQ;
 		}
 		
 		// Populate bestIndexes with the index numbers of the chosen (strongest) formants
 		var bestIndexes:Vector.<int> = new Vector.<int>( count, true );
 		for( v=0; v<count; v++ ) {
 			var bestIndex:int = -1;
-			for( i=0; i<powers.length; i++ ) {
+			for( i=0; i<VPowers.length; i++ ) {
 				if( !okToPick[i] ) continue;
 				
 				// Does this formant region have more power?
-				if( bestIndex==-1 || powers[i] > powers[bestIndex] ) {
+				if( bestIndex==-1 || VPowers[i] > VPowers[bestIndex] ) {
 					bestIndex = i;
 				}
 			}
+			
+			if( bestIndex==-1 ) bestIndex = VPowers.length-1;	// D'oh. Probably the entire frequency band is occupied now.
 			
 			bestIndexes[v] = bestIndex;
 			
@@ -201,13 +199,17 @@ public class FormantDetector extends Object
 		bestIndexes = bestIndexes.sort( function(a:int,b:int):Number { return a-b; } );
 		
 		// Create operator frames
-		var out:Vector.<OperatorFrame> = new Vector.<OperatorFrame>( count, true );
+		var VOps :Vector.<OperatorFrame> = new Vector.<OperatorFrame>( Const.VOICED_OPS, true );
+		var UOps :Vector.<OperatorFrame> = new Vector.<OperatorFrame>( Const.UNVOICED_OPS, true );
 		for( v=0; v<Const.VOICED_OPS; v++ ) {
 			var idx:int = bestIndexes[v];
 			// Why are the highest formants so much louder?? Hmmm
-			out[v] = new OperatorFrame( powers[idx] / freqs[idx], freqs[idx] );
+			VOps[v] = new OperatorFrame( VPowers[idx] / VFreqs[idx], VFreqs[idx] );
+			UOps[v] = new OperatorFrame( UPowers[idx] / UFreqs[idx], UFreqs[idx] );
 		}
-		return out;
+		
+		_voiced.push( VOps );
+		_unvoiced.push( UOps );
 	}
 	
 }
