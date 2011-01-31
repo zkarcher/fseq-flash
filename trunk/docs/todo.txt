@@ -1,3 +1,9 @@
+* Separating voiced from unvoiced:
+-- get the total power of the formant
+-- voiced formants will have higher (bandPower/totalPower), examine the max of those
+
+
+
 TODO
 ====
 

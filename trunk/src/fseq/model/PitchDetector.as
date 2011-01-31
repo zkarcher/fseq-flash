@@ -100,7 +100,7 @@ public class PitchDetector extends Object
 		}
 		
 		_pitches[_index] = Const.SAMPLE_RATE / bestComb;
-		trace("Pitch:", _index, _pitches[_index]);
+		//trace("Pitch:", _index, _pitches[_index]);
 		
 		_index++;
 		
