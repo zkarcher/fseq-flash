@@ -87,7 +87,7 @@ public class AppController extends Sprite
 		//
 		// Buttons
 		//
-		var btnLabels:Array = ["undo","load","save","loadAIFF"];
+		var btnLabels:Array = ["undo","loadSYX","saveSYX","loadAIFF"];
 		var btnFuncs:Array = [undoClick,loadSyxClick,saveSyxClick,loadAudioClick];
 		var count:int = 0;
 		for each( var label:String in btnLabels ) {
@@ -113,7 +113,11 @@ public class AppController extends Sprite
 		stage.addEventListener( KeyboardEvent.KEY_DOWN, keyDownHandler );
 		stage.addEventListener( KeyboardEvent.KEY_UP, keyUpHandler );
 
-		presetChangeHandler();	// immediately load a sequence
+		//presetChangeHandler();	// immediately load a sequence
+		_syxLoader = new SyxLoader();
+		_syxLoader.addEventListener( CustomEvent.FSEQ_COMPLETE, fseqComplete, false, 0, true );
+		_syxLoader.addEventListener( CustomEvent.LOAD_FAILED, loadSyxFailed, false, 0, true );
+		_syxLoader.initWithURL( "fseqs/zacharcher/wreckAll.syx" );
 	}
 		
 	//--------------------------------------
