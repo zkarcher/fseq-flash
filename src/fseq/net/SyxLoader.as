@@ -249,11 +249,11 @@ public class SyxLoader extends BaseLoader
 		_seq.loopStart = loopStart;
 		_seq.loopEnd = loopEnd;
 		_seq.loopMode = (loopMode==0) ? Const.ONE_WAY : Const.ROUND;
-		_seq.speedAdjust = speedAdjust;
+		if( speedAdjust ) _seq.speedAdjust = speedAdjust;
 		_seq.velSensitivity = velSensitivity;
 		_seq.pitchMode = (pitchMode==0) ? Const.FSEQ_PITCH : Const.FREE_PITCH;
-		_seq.noteAssign = noteAssign;
-		_seq.pitchTuning = pitchTuning;
+		if( noteAssign ) _seq.noteAssign = noteAssign;
+		if( pitchTuning ) _seq.pitchTuning = pitchTuning;
 		_seq.seqDelay = seqDelay;
 		
 		dispatchEvent( new CustomEvent( CustomEvent.FSEQ_COMPLETE ));
