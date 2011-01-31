@@ -86,6 +86,7 @@ public class FormantDetector extends Object
 		var UPowers:Vector.<Number> = new Vector.<Number>( frame.length, true );
 		var VFreqs:Vector.<Number> = new Vector.<Number>( frame.length, true );	// average frequecy (center) of the potential formants
 		var UFreqs:Vector.<Number> = new Vector.<Number>( frame.length, true );
+		var VURatios:Vector.<Number> = new Vector.<Number>( frame.length, true );
 		
 		// At each potential formant frequency, compute the power at that formant
 		for( i=0; i<frame.length; i++ ) {
@@ -129,12 +130,20 @@ public class FormantDetector extends Object
 			// Seems to vary between about 0.15 and 0.30 usually:
 			//trace("Yo, my maxEnergyRatio is", maxEnergyRatio);
 			
+			// We have computed the power and average center frequency for a formant at this frequency:
 			VFreqs[i] = UFreqs[i] = freqSum / power;
 			
-			// We have computed the power and average center frequency for a formant at this frequency:
-			VPowers[i] = power;// / VFreqs[i];
-			// Unvoiced (noise) power will be louder than pitched power, so turn it down!
-			UPowers[i] = 0;//UPower*0.5;// / UFreqs[i] * 0.5;// * Const.PITCHED_REGION_OF_OVERTONE*2;
+			if( false ) {
+				// All voiced energy
+				VPowers[i] = power;// / VFreqs[i];
+				UPowers[i] = 0;
+			} else {
+				// Based on maxEnergyRatio, try to guess whether this formant frame is voiced or unvoiced
+				var vuRatio:Number = Num.clamp( (maxEnergyRatio-Const.UNVOICED_ENERGY_RATIO) / (Const.VOICED_ENERGY_RATIO-Const.UNVOICED_ENERGY_RATIO), 0.0, 1.0 );	// 0..1
+				VURatios[i] = vuRatio;
+				VPowers[i] = power * vuRatio;
+				UPowers[i] = power * (1-vuRatio);
+			}
 			
 			/*
 			if( LOWPASS ) {
@@ -145,7 +154,7 @@ public class FormantDetector extends Object
 			*/
 		}
 		
-		pickAndStoreFormants( Const.VOICED_OPS, VPowers, VFreqs, UPowers, UFreqs, _spectrum.freqs );
+		pickAndStoreFormants( Const.VOICED_OPS, VPowers, VFreqs, UPowers, UFreqs, _spectrum.freqs, VURatios );
 		
 		_index++;
 		
@@ -160,7 +169,7 @@ public class FormantDetector extends Object
 	//--------------------------------------
 	//  PRIVATE & PROTECTED INSTANCE METHODS
 	//--------------------------------------
-	private function pickAndStoreFormants( count:int, VPowers:Vector.<Number>, VFreqs:Vector.<Number>, UPowers:Vector.<Number>, UFreqs:Vector.<Number>, bandFreqs:Vector.<Number> ) :void {
+	private function pickAndStoreFormants( count:int, VPowers:Vector.<Number>, VFreqs:Vector.<Number>, UPowers:Vector.<Number>, UFreqs:Vector.<Number>, bandFreqs:Vector.<Number>, vuRatios:Vector.<Number> ) :void {
 		var v:int, i:int;
 		
 		// Choosing formants: When a formant is chosen, disallow its neighbars to be picked.
@@ -201,12 +210,15 @@ public class FormantDetector extends Object
 		// Create operator frames
 		var VOps :Vector.<OperatorFrame> = new Vector.<OperatorFrame>( Const.VOICED_OPS, true );
 		var UOps :Vector.<OperatorFrame> = new Vector.<OperatorFrame>( Const.UNVOICED_OPS, true );
+		var ratios:Vector.<Number> = new Vector.<Number>( Const.VOICED_OPS, true );
 		for( v=0; v<Const.VOICED_OPS; v++ ) {
 			var idx:int = bestIndexes[v];
 			// Why are the highest formants so much louder?? Hmmm
-			VOps[v] = new OperatorFrame( VPowers[idx] / VFreqs[idx], VFreqs[idx] );
-			UOps[v] = new OperatorFrame( UPowers[idx] / UFreqs[idx], UFreqs[idx] );
+			VOps[v] = new OperatorFrame( VPowers[idx] /*/ VFreqs[idx]*/, VFreqs[idx] );
+			UOps[v] = new OperatorFrame( UPowers[idx] /*/ UFreqs[idx]*/, UFreqs[idx] );
+			ratios[v] = vuRatios[idx];
 		}
+		//trace("Chose vu ratios:", ratios);
 		
 		_voiced.push( VOps );
 		_unvoiced.push( UOps );

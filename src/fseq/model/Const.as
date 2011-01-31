@@ -18,6 +18,8 @@ public class Const extends Object
 	public static const FORMANT_DETECT_DISALLOW_NEIGHBORS :int = 7;	// Disallow formants being this close together
 	public static const PITCHED_REGION_OF_OVERTONE :Number = 0.25;	// Separates spectral energy into voiced/unvoiced. <0.5 plz
 	public static const IMPORT_HIGHEST_FORMANT_FREQ :Number = 7000.0;
+	public static const UNVOICED_ENERGY_RATIO :Number = 0.15;
+	public static const VOICED_ENERGY_RATIO :Number = 0.25;
 	
 	// Fseq parameters
 	public static const FRAMES :int = 512;
@@ -45,7 +47,7 @@ public class Const extends Object
 	public static const GRAPH_AMP_HEIGHT :Number = 100;
 	public static const GRAPH_FREQ_HEIGHT :Number = 500;
 	public static const VOICED_DOT :String = "VOICED_DOT";
-	public static const INACTIVE_BRIGHTNESS :Number = 0.4;
+	public static const INACTIVE_BRIGHTNESS :Number = 0.2;
 	public static const HIGHEST_FREQ_IN_LINEAR_VIEW :Number = 7000.0;
 	
 	// Editor tools
