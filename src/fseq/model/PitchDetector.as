@@ -91,7 +91,7 @@ public class PitchDetector extends Object
 			}
 			
 			// Try to compensate for octave errors: Multiply by the comb width
-			power *= comb;
+			//power *= comb;	// NO, we're already summing less samples for narrower combs
 			
 			if( power > bestPower ) {
 				bestPower = power;

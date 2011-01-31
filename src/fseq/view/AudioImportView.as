@@ -103,6 +103,7 @@ public class AudioImportView extends Sprite
 	private var _spectrumView :SpectralAnalysisView;
 	private var _fseq :FormantSequence;
 	private var _pitchDetector :PitchDetector;
+	private var _isPitchSet :Boolean = false;
 	private var _formantDetector :FormantDetector;
 	private var _opViews :Vector.<OperatorView>;
 	
@@ -179,7 +180,7 @@ public class AudioImportView extends Sprite
 				_isLabelDirty = false;
 			} else {
 				_fseq = new FormantSequence();
-				_pitchDetector = new PitchDetector( _parser, 60.0, 220.0 );
+				_pitchDetector = new PitchDetector( _parser, 100.0, 220.0 );
 				showProgBar();
 				if( _skip && !_skip.parent ) addChild( _skip );
 			}
@@ -193,9 +194,6 @@ public class AudioImportView extends Sprite
 				time += _pitchDetector.detectNext();
 				if( _pitchDetector.isComplete ) {
 					// Pitch detection is complete!
-					for( f=0; f<Const.FRAMES; f++ ) {
-						_fseq.pitch().frame(f).freq = _pitchDetector.pitchAt(f);
-					}
 					if( _skip && _skip.parent ) _skip.parent.removeChild( _skip );
 					break;
 				}
@@ -206,7 +204,13 @@ public class AudioImportView extends Sprite
 			
 			_progBar.width = (Number(_pitchDetector.index) / Const.FRAMES) * _spectrumView.width;
 			_isLabelDirty = true;
-
+			
+		} else if( !_isPitchSet ) {
+			for( f=0; f<Const.FRAMES; f++ ) {
+				_fseq.pitch().frame(f).freq = _pitchDetector.pitchAt(f);
+			}
+			_isPitchSet = true;
+			
 		} else if( !_formantDetector ) {
 			if( _skip && _skip.parent ) _skip.parent.removeChild( _skip );
 			hideFseqView();
@@ -218,7 +222,7 @@ public class AudioImportView extends Sprite
 				_label.text = "Detecting formants...";
 				_isLabelDirty = false;
 			} else {
-				_formantDetector = new FormantDetector( _spectrum );
+				_formantDetector = new FormantDetector( _spectrum, _fseq.pitch() );
 				showProgBar();
 			}
 
