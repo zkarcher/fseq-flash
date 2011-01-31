@@ -42,12 +42,13 @@ public class GraphView extends Sprite
 			_opViews.push( new OperatorView( Const.VOICED, i, _rect ));
 		}
 		for( i=0; i<Const.UNVOICED_OPS; i++ ) {
-			_opViews.push( new OperatorView( Const.UNVOICED, i, _rect ));
+			_opViews.unshift( new OperatorView( Const.UNVOICED, i, _rect ));
 		}
+		_opViews.push( new OperatorView( Const.PITCH, 0, _rect ));
 		
 		// Add all the opViews to the canvas
 		for each( var opView:OperatorView in _opViews ) {
-			addChildAt( opView, 0 );
+			addChild( opView );
 		}
 		
 		_bg = new Bitmap( new BitmapData( _rect.width, _rect.height, false, 0x0 ), PixelSnapping.ALWAYS, false );

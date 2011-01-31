@@ -135,7 +135,10 @@ public class OperatorView extends Sprite
 	private var _rect :Rectangle;
 	private var _isEditable :Boolean;
 	
-	// Voiced paint splotches
+	// Pitch line
+	private var _line :Shape;
+	
+	// Voiced & unvoiced paint splotches
 	private var _circSizes :int = 0;
 	private var _circData :Vector.<BitmapData>;
 	private var _circs :Vector.<Bitmap>;
@@ -171,6 +174,7 @@ public class OperatorView extends Sprite
 		if( !fseq ) return null;
 		
 		switch( _type ) {
+			case Const.PITCH:	return fseq.pitch();
 			case Const.VOICED:	return fseq.voiced(_id);
 			case Const.UNVOICED: return fseq.unvoiced(_id);
 		}
@@ -194,6 +198,19 @@ public class OperatorView extends Sprite
 		var operator:Operator;
 		
 		switch( _type ) {
+			case Const.PITCH:
+				var color:uint = Const.color( _type );
+				if( _line && _line.parent ) _line.parent.removeChild( _line );
+				
+				_line = new Shape();
+				_line.graphics.lineStyle( 1.5, color, 1.0 );
+				_line.graphics.moveTo( 0, yAtFrame(fseq,0) );
+				for( f=1; f<Const.FRAMES; f++ ) {
+					_line.graphics.lineTo( f * Const.GRAPH_SCALE_X, yAtFrame(fseq,f) );
+				}
+				addChild( _line );
+				break;
+			
 			case Const.VOICED:
 			case Const.UNVOICED:
 				operator = (_type==Const.VOICED) ? fseq.voiced(_id) : fseq.unvoiced(_id);
