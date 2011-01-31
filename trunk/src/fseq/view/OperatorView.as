@@ -151,7 +151,7 @@ public class OperatorView extends Sprite
 	public function get isEditable() :Boolean { return _isEditable; }
 	public function set isEditable( b:Boolean ) :void {
 		_isEditable = b;
-		alpha = b ? 1.0 : 0.4;
+		alpha = b ? 1.0 : Const.INACTIVE_BRIGHTNESS;
 	}
 	
 	// Hilite when the mouse hovers near this OperatorView, for example
