@@ -180,7 +180,7 @@ public class AudioImportView extends Sprite
 				_isLabelDirty = false;
 			} else {
 				_fseq = new FormantSequence();
-				_pitchDetector = new PitchDetector( _parser, 100.0, 220.0 );
+				_pitchDetector = new PitchDetector( _parser, 110.0, 880.0 );
 				showProgBar();
 				if( _skip && !_skip.parent ) addChild( _skip );
 			}
@@ -314,6 +314,7 @@ public class AudioImportView extends Sprite
 		for( i=0; i<Const.UNVOICED_OPS; i++ ) {
 			_opViews.unshift( new OperatorView( Const.UNVOICED, i, rect ));	// draw noise ops under the pitched ops
 		}
+		_opViews.push( new OperatorView( Const.PITCH, 0, rect ));
 		
 		// Add all the opViews to the canvas
 		for each( var opView:OperatorView in _opViews ) {
