@@ -300,6 +300,7 @@ public class AppController extends Sprite
 		_import = null;
 	}
 	private function importCancel( e:CustomEvent ) :void {
+		stopAudio();
 		_import.teardown();
 		_import = null;
 	}
