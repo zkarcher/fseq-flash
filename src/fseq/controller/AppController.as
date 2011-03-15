@@ -59,10 +59,19 @@ public class AppController extends Sprite
 		_editorView.history.addEventListener( CustomEvent.ACTIVE_FSEQ_CHANGED, activeFseqChanged );
 		addChildAt( _editorView, 0 );
 		
+		var str:String;
+		
 		_presets = new ComboBox();
-		for each( var str:String in Presets.fs1rSequences() ) {
-			_presets.addItem( {label:str, data:str} );
+		_presets.addItem( {label:"Custom Presets:",data:""});
+		for each( str in Presets.zachArcherSequences() ) {
+			_presets.addItem( {label:"       "+str, data:"fseqs/zacharcher/"+str} );
 		}
+		_presets.addItem( {label:" ",data:""});
+		_presets.addItem( {label:"Yamaha FS1R Presets:",data:""});
+		for each( str in Presets.fs1rSequences() ) {
+			_presets.addItem( {label:"       "+str, data:"fseqs/fs1r/"+str} );
+		}
+		
 		_presets.x = 530;
 		_presets.y = 20;
 		_presets.width += 100;
@@ -117,7 +126,7 @@ public class AppController extends Sprite
 		_syxLoader = new SyxLoader();
 		_syxLoader.addEventListener( CustomEvent.FSEQ_COMPLETE, fseqComplete, false, 0, true );
 		_syxLoader.addEventListener( CustomEvent.LOAD_FAILED, loadSyxFailed, false, 0, true );
-		_syxLoader.initWithURL( "fseqs/zacharcher/wreckAll.syx" );
+		_syxLoader.initWithURL( "fseqs/zacharcher/oneTwoThree.syx" );
 	}
 		
 	//--------------------------------------
@@ -247,8 +256,10 @@ public class AppController extends Sprite
 		if( stage ) stage.focus = null;
 		
 		// Flash components are evil. Index is -1 when launched
-		var idx:int = Math.max( 0, _presets.selectedIndex );
-		var path:String = Presets.pathToFS1RSequenceId( idx );
+		if( _presets.selectedIndex < 0 ) return;
+		
+		var path:String = String( _presets.value );
+		if( path.length==0 ) return;	// Some items are just labels, they have no values
 		
 		_syxLoader = new SyxLoader();
 		_syxLoader.addEventListener( CustomEvent.FSEQ_COMPLETE, fseqComplete, false, 0, true );
