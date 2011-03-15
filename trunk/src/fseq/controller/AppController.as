@@ -108,6 +108,12 @@ public class AppController extends Sprite
 		}
 		
 		addEventListener( Event.ENTER_FRAME, initEnterFrame );
+		
+		var caption:Caption_mc = new Caption_mc();
+		caption.tf.htmlText = "Press [SPACE BAR] to play.\n\n<a href=\"http://blog.zacharcher.com/\">blog.zacharcher.com</a>";
+		caption.x = Const.FRAMES * Const.GRAPH_SCALE_X;
+		caption.y = 700;
+		addChild( caption );
 	}
 	
 	private function testStuff() :void {
