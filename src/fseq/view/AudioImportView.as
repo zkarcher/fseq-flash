@@ -13,6 +13,7 @@ package fseq.view {
 import flash.display.*;
 import flash.events.*;
 import flash.geom.*;
+import fl.controls.*;
 import caurina.transitions.Tweener;
 import com.zacharcher.color.*;
 import com.zacharcher.math.*;
@@ -72,6 +73,24 @@ public class AudioImportView extends Sprite
 		_ok.y = _cancel.y = 650;
 		addChild( _cancel );
 		
+		_formantComboBox = new ComboBox();
+		var index:int = 0;
+		for each( var type:String in DetectionType.ALL_FORMANT_DETECTORS ) {
+			_formantComboBox.addItem( {label:type, data:type} );
+			if( type == _formantType ) _formantComboBox.selectedIndex = index;
+			index++;
+		}
+		_formantComboBox.width += 100;
+		_formantComboBox.addEventListener( Event.CHANGE, formantComboBoxChangeHandler, false, 0, true );
+		_formantComboBox.x = 800;
+		_formantComboBox.y = 60;
+		addChild( _formantComboBox );
+		
+		var label:CustomTextView = new CustomTextView( "formant algorithm:", {color:0x0, size:12} );
+		label.x = _formantComboBox.x - label.textWidth - 18;
+		label.y = _formantComboBox.y + 6;
+		addChild( label );
+		
 		// Analyze & display audio 1 frame per step, so Flash doesn't time out :P
 		addEventListener( Event.ENTER_FRAME, enterFrame, false, 0, true );
 	}
@@ -106,6 +125,10 @@ public class AudioImportView extends Sprite
 	private var _isPitchSet :Boolean = false;
 	private var _formantDetector :FormantDetector;
 	private var _opViews :Vector.<OperatorView>;
+	
+	// Settings
+	private static var _formantType :String = DetectionType.FORMANTS_NONE;
+	private var _formantComboBox :ComboBox;
 	
 	// Buttons
 	private var _skip :BasicButton;
@@ -222,7 +245,14 @@ public class AudioImportView extends Sprite
 				_label.text = "Detecting formants...";
 				_isLabelDirty = false;
 			} else {
-				_formantDetector = new FormantDetector( _spectrum, _fseq.pitch() );
+				switch( _formantType ) {
+					case DetectionType.VOCODER:
+						break;
+					
+					default:
+						_formantDetector = new FormantDetector( _spectrum, _fseq.pitch(), DetectionType.smoothness(_formantType) );
+						break;
+				}
 				showProgBar();
 			}
 
@@ -254,21 +284,31 @@ public class AudioImportView extends Sprite
 			
 		} else {
 			hideProgBar();
-			
-			// FSEQ is ready?
-			if( _ok ) {
-			 	if( !_ok.parent && fseqIsReady ) {
-					showFseqView();
-					addChild( _ok );
-					
-				} else if( _ok.parent && !fseqIsReady ) {
-					hideFseqView();
-					_ok.parent.removeChild( _ok );
-				}
-			}
-			
-			_wasReadyLastFrame = fseqIsReady;
 		}
+		
+		// FSEQ is ready?
+	 	if( !_wasReadyLastFrame && fseqIsReady ) {
+			_label.visible = false;
+			showFseqView();
+			addChild( _ok );
+		} else if( _wasReadyLastFrame && !fseqIsReady ) {
+			_label.visible = true;
+			hideFseqView();
+			_ok.parent.removeChild( _ok );
+		}
+		
+		_wasReadyLastFrame = fseqIsReady;
+	}
+	
+	//
+	// DETECTION TYPE CHANGES
+	//
+	private function formantComboBoxChangeHandler( e:Event ) :void {
+		// Don't let the dropdown keep the focus
+		if( stage ) stage.focus = null;
+
+		_formantType = _formantComboBox.value;	// store this for later
+		_formantDetector = null;	// on next enterFrame, this will be recreated
 	}
 	
 	//

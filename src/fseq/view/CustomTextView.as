@@ -52,6 +52,8 @@ public class CustomTextView extends CustomText_mc
 	//--------------------------------------
 	private var _params :Object;
 	
+	public function get textWidth() :Number { return tf.textWidth; }
+	
 	//--------------------------------------
 	//  GETTER/SETTERS
 	//--------------------------------------
