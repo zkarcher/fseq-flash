@@ -108,6 +108,30 @@ public class SpectralAnalysis extends Object
 		return _frames[index];
 	}
 	
+	public function asBitmapData( logarithmic:Boolean=true, grayscale:Boolean=false ) :BitmapData {
+		var i:int, j:int;
+		var frame:Vector.<Number>;
+				
+		var bData:BitmapData = new BitmapData( _frames.length, _frames[0].length, false, 0x0 );
+		for( i=0; i<_frames.length; i++ ) {
+			frame = _frames[i];
+			for( j=0; j<frame.length; j++ ) {
+				var color:uint;
+				if( logarithmic ) {
+					var logScale:Number = Math.log(frame[j]+1) * Math.LOG2E;	// 0..1, hopefully
+					color = Math.min( 0xff, logScale * 0xff );
+				} else {
+					color = Math.min(1.0, Math.max(0, frame[j])) * 0xff;
+				}
+				
+				if( grayscale ) color *= 0x010101;	// fill every pixel of RGB
+				bData.setPixel( i, j, color );
+			}
+		}
+		
+		return bData;
+	}
+	
 	//--------------------------------------
 	//  EVENT HANDLERS
 	//--------------------------------------

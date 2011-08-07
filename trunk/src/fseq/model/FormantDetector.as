@@ -12,6 +12,7 @@ package fseq.model {
 
 import flash.display.*;
 import flash.events.*;
+import flash.filters.*;
 import flash.geom.*;
 import caurina.transitions.Tweener;
 import com.zacharcher.color.*;
@@ -32,18 +33,28 @@ public class FormantDetector extends Object
 	//--------------------------------------
 	//  CONSTRUCTOR
 	//--------------------------------------
-	public function FormantDetector( inSpectrum:SpectralAnalysis, inPitch:Operator ) {
+	public function FormantDetector( inSpectrum:SpectralAnalysis, inPitch:Operator, inSmoothness:Number ) {
 		_spectrum = inSpectrum;
 		_pitch = inPitch;
 
 		_voiced = new Vector.<Vector.<OperatorFrame>>();
 		_unvoiced = new Vector.<Vector.<OperatorFrame>>();
+		
+		// Instead of manipulating fields of Numbers every frame, just export the spectrum into BitmapData,
+		// and apply a blur operation. w00t.
+		_spectrumData = _spectrum.asBitmapData();
+		
+		var blurWidth:Number = inSmoothness;
+		var blurHeight:Number = Const.FORMANT_DETECT_BANDWIDTH;
+		var blurFilter:BlurFilter = new BlurFilter( blurWidth, blurHeight, BitmapFilterQuality.HIGH );
+		_spectrumData.applyFilter( _spectrumData, _spectrumData.rect, new Point(0,0), blurFilter );
 	}
 	
 	//--------------------------------------
 	//  PRIVATE VARIABLES
 	//--------------------------------------
 	private var _spectrum :SpectralAnalysis;
+	private var _spectrumData :BitmapData;
 	private var _pitch :Operator;
 	private var _index :int = 0;
 	private var _voiced :Vector.<Vector.<OperatorFrame>>;		// _voiced[frame][opIndex]
@@ -65,7 +76,6 @@ public class FormantDetector extends Object
 		return _unvoiced[frame][opIndex];
 	}
 	
-	// Using time domain pitch detection (autocorrelation) for now.
 	// Returns the amount of time required for this detection step.
 	public function detectNext() :Number {
 		if( isComplete ) return 0;
@@ -88,7 +98,7 @@ public class FormantDetector extends Object
 		var UFreqs:Vector.<Number> = new Vector.<Number>( frame.length, true );
 		var VURatios:Vector.<Number> = new Vector.<Number>( frame.length, true );
 		
-		// At each potential formant frequency, compute the power at that formant
+		// For every row, (at each potential formant frequency,) compute the power at that formant
 		for( i=0; i<frame.length; i++ ) {
 			//var pitch:Number = _pitch.frame(_index).freq;
 			
@@ -99,6 +109,8 @@ public class FormantDetector extends Object
 			var UFreqSum:Number = 0;
 			*/
 			
+			/*
+			// OLDER METHOD: Apply a window function to the Numbers inside the frame.
 			var unwindowed:Vector.<Number> = new Vector.<Number>( window.length*2-1, true );
 			var windowed:Vector.<Number> = new Vector.<Number>( window.length*2-1, true );	// windowed spectrum
 			var power:Number = 0;
@@ -108,6 +120,8 @@ public class FormantDetector extends Object
 				var band:int = w+i;
 				
 				var setIndex:int = w+window.length-1;
+				
+				// If the window is looking outside of the band, then its values at those coordinates should be 0
 				if( band < 0 || frame.length <= band ) {
 					unwindowed[setIndex] = 0;
 					windowed[setIndex] = 0;
@@ -127,11 +141,21 @@ public class FormantDetector extends Object
 			for( w=0; w<windowed.length; w++ ) {
 				maxEnergyRatio = Math.max( maxEnergyRatio, unwindowed[w] / power );
 			}
+
 			// Seems to vary between about 0.15 and 0.30 usually:
-			//trace("Yo, my maxEnergyRatio is", maxEnergyRatio);
-			
+			//trace("My maxEnergyRatio is", maxEnergyRatio);
+
 			// We have computed the power and average center frequency for a formant at this frequency:
 			VFreqs[i] = UFreqs[i] = freqSum / power;
+			*/
+			
+			// NEWER METHOD: We have already exported the spectral data as a BitmapData, and applied a blur filter.
+			// Just sample the pixel at that location.
+			var power:Number = Number( _spectrumData.getPixel( _index, i )) * (1.0/255);
+			// This number is logarithmic, so shift it back to linear scale
+			power = Math.pow( 2, power )-1;
+			power = Math.max( 0, power );	// sanity check; never below 0
+			VFreqs[i] = UFreqs[i] = _spectrum.freqs[i];
 			
 			if( false ) {
 				// All voiced energy
@@ -139,7 +163,8 @@ public class FormantDetector extends Object
 				UPowers[i] = 0;
 			} else {
 				// Based on maxEnergyRatio, try to guess whether this formant frame is voiced or unvoiced
-				var vuRatio:Number = Num.clamp( (maxEnergyRatio-Const.UNVOICED_ENERGY_RATIO) / (Const.VOICED_ENERGY_RATIO-Const.UNVOICED_ENERGY_RATIO), 0.0, 1.0 );	// 0..1
+				//var vuRatio:Number = Num.clamp( (maxEnergyRatio-Const.UNVOICED_ENERGY_RATIO) / (Const.VOICED_ENERGY_RATIO-Const.UNVOICED_ENERGY_RATIO), 0.0, 1.0 );	// 0..1
+				var vuRatio:Number = 0.9;
 				VURatios[i] = vuRatio;
 				VPowers[i] = power * vuRatio;
 				UPowers[i] = power * (1-vuRatio);
@@ -214,8 +239,8 @@ public class FormantDetector extends Object
 		for( v=0; v<Const.VOICED_OPS; v++ ) {
 			var idx:int = bestIndexes[v];
 			// Why are the highest formants so much louder?? Hmmm
-			VOps[v] = new OperatorFrame( VPowers[idx] /*/ VFreqs[idx]*/, VFreqs[idx] );
-			UOps[v] = new OperatorFrame( UPowers[idx] /*/ UFreqs[idx]*/, UFreqs[idx] );
+			VOps[v] = new OperatorFrame( VPowers[idx] /* / VFreqs[idx]*/, VFreqs[idx] );
+			UOps[v] = new OperatorFrame( UPowers[idx] /* / UFreqs[idx]*/, UFreqs[idx] );
 			ratios[v] = vuRatios[idx];
 		}
 		//trace("Chose vu ratios:", ratios);

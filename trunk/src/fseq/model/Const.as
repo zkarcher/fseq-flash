@@ -14,8 +14,8 @@ public class Const extends Object
 	// Spectral & formant analysis
 	public static const FFT_BINS :int = 1024;
 	public static const SPECTRAL_BANDS :int = FFT_BINS/2 - 1;
-	public static const FORMANT_DETECT_BANDWIDTH :int = 7;	// Formant detection analyzes this many bands*2-1
-	public static const FORMANT_DETECT_DISALLOW_NEIGHBORS :int = 7;	// Disallow formants being this close together
+	public static const FORMANT_DETECT_BANDWIDTH :int = 5;	// Formant detection analyzes this many freq bands*2-1
+	public static const FORMANT_DETECT_DISALLOW_NEIGHBORS :int = 5;	// Disallow formants being this close together
 	public static const PITCHED_REGION_OF_OVERTONE :Number = 0.25;	// Separates spectral energy into voiced/unvoiced. <0.5 plz
 	public static const IMPORT_HIGHEST_FORMANT_FREQ :Number = 10000.0;
 	public static const UNVOICED_ENERGY_RATIO :Number = 0.15;
