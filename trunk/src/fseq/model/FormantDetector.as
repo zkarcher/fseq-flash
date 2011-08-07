@@ -236,7 +236,7 @@ public class FormantDetector extends Object
 			// Very high frequencies may not be chosen
 			okToPick[i] = bandFreqs[i] < Const.IMPORT_HIGHEST_FORMANT_FREQ;
 		}
-		
+
 		// Populate bestIndexes with the index numbers of the chosen (strongest) formants
 		var bestIndexes:Vector.<int> = new Vector.<int>( count, true );
 		for( v=0; v<count; v++ ) {
