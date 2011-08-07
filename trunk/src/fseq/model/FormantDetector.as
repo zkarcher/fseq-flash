@@ -42,19 +42,24 @@ public class FormantDetector extends Object
 		
 		// Instead of manipulating fields of Numbers every frame, just export the spectrum into BitmapData,
 		// and apply a blur operation. w00t.
-		_spectrumData = _spectrum.asBitmapData();
+		_spectrumBlurY = _spectrum.asBitmapData();
+		_spectrumBlurXY = _spectrumBlurY.clone();
 		
 		var blurWidth:Number = inSmoothness;
 		var blurHeight:Number = Const.FORMANT_DETECT_BANDWIDTH;
 		var blurFilter:BlurFilter = new BlurFilter( blurWidth, blurHeight, BitmapFilterQuality.HIGH );
-		_spectrumData.applyFilter( _spectrumData, _spectrumData.rect, new Point(0,0), blurFilter );
+		_spectrumBlurXY.applyFilter( _spectrumBlurXY, _spectrumBlurXY.rect, new Point(0,0), blurFilter );
+		
+		blurFilter = new BlurFilter( 0, blurHeight, BitmapFilterQuality.HIGH );
+		_spectrumBlurY.applyFilter( _spectrumBlurY, _spectrumBlurY.rect, new Point(0,0), blurFilter );
 	}
 	
 	//--------------------------------------
 	//  PRIVATE VARIABLES
 	//--------------------------------------
 	private var _spectrum :SpectralAnalysis;
-	private var _spectrumData :BitmapData;
+	private var _spectrumBlurY :BitmapData;	// retains accurate power from moment to moment
+	private var _spectrumBlurXY :BitmapData;	// creates a smoother image for more continuous formants (hopefully)
 	private var _pitch :Operator;
 	private var _index :int = 0;
 	private var _voiced :Vector.<Vector.<OperatorFrame>>;		// _voiced[frame][opIndex]
@@ -92,10 +97,10 @@ public class FormantDetector extends Object
 		
 		var frame:Vector.<Number> = _spectrum.frame(_index);	// This is the spectral data
 		// The power of each formant will be stored here. V==voiced, U==unvoiced
-		var VPowers:Vector.<Number> = new Vector.<Number>( frame.length, true );
-		var UPowers:Vector.<Number> = new Vector.<Number>( frame.length, true );
-		var VFreqs:Vector.<Number> = new Vector.<Number>( frame.length, true );	// average frequecy (center) of the potential formants
-		var UFreqs:Vector.<Number> = new Vector.<Number>( frame.length, true );
+		var VFormantPowers:Vector.<Number> = new Vector.<Number>( frame.length, true );
+		var UFormantPowers:Vector.<Number> = new Vector.<Number>( frame.length, true );
+		var VTruePowers:Vector.<Number> = new Vector.<Number>( frame.length, true );
+		var UTruePowers:Vector.<Number> = new Vector.<Number>( frame.length, true );
 		var VURatios:Vector.<Number> = new Vector.<Number>( frame.length, true );
 		
 		// For every row, (at each potential formant frequency,) compute the power at that formant
@@ -149,25 +154,44 @@ public class FormantDetector extends Object
 			VFreqs[i] = UFreqs[i] = freqSum / power;
 			*/
 			
+			var vuRatio:Number;
+			
 			// NEWER METHOD: We have already exported the spectral data as a BitmapData, and applied a blur filter.
 			// Just sample the pixel at that location.
-			var power:Number = Number( _spectrumData.getPixel( _index, i )) * (1.0/255);
+			var power:Number = Number( _spectrumBlurXY.getPixel( _index, i )) * (1.0/255);
 			// This number is logarithmic, so shift it back to linear scale
 			power = Math.pow( 2, power )-1;
-			power = Math.max( 0, power );	// sanity check; never below 0
-			VFreqs[i] = UFreqs[i] = _spectrum.freqs[i];
+			power = Math.max( 0, power );	// sanity check; should never be less than 0
 			
 			if( false ) {
 				// All voiced energy
-				VPowers[i] = power;// / VFreqs[i];
-				UPowers[i] = 0;
+				VFormantPowers[i] = power;// / VFreqs[i];
+				UFormantPowers[i] = 0;
 			} else {
 				// Based on maxEnergyRatio, try to guess whether this formant frame is voiced or unvoiced
 				//var vuRatio:Number = Num.clamp( (maxEnergyRatio-Const.UNVOICED_ENERGY_RATIO) / (Const.VOICED_ENERGY_RATIO-Const.UNVOICED_ENERGY_RATIO), 0.0, 1.0 );	// 0..1
-				var vuRatio:Number = 0.9;
+				vuRatio = 0.9;
 				VURatios[i] = vuRatio;
-				VPowers[i] = power * vuRatio;
-				UPowers[i] = power * (1-vuRatio);
+				VFormantPowers[i] = power * vuRatio;
+				UFormantPowers[i] = power * (1-vuRatio);
+			}
+
+			power = Number( _spectrumBlurY.getPixel( _index, i )) * (1.0/255);
+			// This number is logarithmic, so shift it back to linear scale
+			power = Math.pow( 2, power )-1;
+			power = Math.max( 0, power );	// sanity check; should never be less than 0
+			
+			if( false ) {
+				// All voiced energy
+				VTruePowers[i] = power;// / VFreqs[i];
+				UTruePowers[i] = 0;
+			} else {
+				// Based on maxEnergyRatio, try to guess whether this formant frame is voiced or unvoiced
+				//var vuRatio:Number = Num.clamp( (maxEnergyRatio-Const.UNVOICED_ENERGY_RATIO) / (Const.VOICED_ENERGY_RATIO-Const.UNVOICED_ENERGY_RATIO), 0.0, 1.0 );	// 0..1
+				vuRatio = 0.9;
+				VURatios[i] = vuRatio;
+				VTruePowers[i] = power * vuRatio;
+				UTruePowers[i] = power * (1-vuRatio);
 			}
 			
 			/*
@@ -179,7 +203,7 @@ public class FormantDetector extends Object
 			*/
 		}
 		
-		pickAndStoreFormants( Const.VOICED_OPS, VPowers, VFreqs, UPowers, UFreqs, _spectrum.freqs, VURatios );
+		pickAndStoreFormants( Const.VOICED_OPS, VFormantPowers, UFormantPowers, VTruePowers, UTruePowers, VURatios );
 		
 		_index++;
 		
@@ -194,12 +218,22 @@ public class FormantDetector extends Object
 	//--------------------------------------
 	//  PRIVATE & PROTECTED INSTANCE METHODS
 	//--------------------------------------
-	private function pickAndStoreFormants( count:int, VPowers:Vector.<Number>, VFreqs:Vector.<Number>, UPowers:Vector.<Number>, UFreqs:Vector.<Number>, bandFreqs:Vector.<Number>, vuRatios:Vector.<Number> ) :void {
+	private function pickAndStoreFormants( count:int, VFormantPowers:Vector.<Number>, UFormantPowers:Vector.<Number>, VTruePowers:Vector.<Number>, UTruePowers:Vector.<Number>, vuRatios:Vector.<Number> ) :void {
 		var v:int, i:int;
 		
+		// To get a formant frequency: Don't just use the value in bandFreqs, it will sound robotic.
+		// Average out the surrounding powers vs. frequencies.
+		var bandFreqs:Vector.<Number> = _spectrum.freqs;
+		var freqWindow:Vector.<Number> = new Vector.<Number>( Const.FORMANT_DETECT_BANDWIDTH, true );
+		var f:int;
+		for( f=0; f<Const.FORMANT_DETECT_BANDWIDTH; f++ ) {
+			freqWindow[f] = (Math.cos(f/Const.FORMANT_DETECT_BANDWIDTH) * Math.PI) + 1;
+		}
+		
 		// Choosing formants: When a formant is chosen, disallow its neighbars to be picked.
-		var okToPick:Vector.<Boolean> = new Vector.<Boolean>( VPowers.length, true );
-		for( i=0; i<VPowers.length; i++ ) {
+		var okToPick:Vector.<Boolean> = new Vector.<Boolean>( VFormantPowers.length, true );
+		for( i=0; i<VFormantPowers.length; i++ ) {
+			// Very high frequencies may not be chosen
 			okToPick[i] = bandFreqs[i] < Const.IMPORT_HIGHEST_FORMANT_FREQ;
 		}
 		
@@ -207,16 +241,16 @@ public class FormantDetector extends Object
 		var bestIndexes:Vector.<int> = new Vector.<int>( count, true );
 		for( v=0; v<count; v++ ) {
 			var bestIndex:int = -1;
-			for( i=0; i<VPowers.length; i++ ) {
+			for( i=0; i<VFormantPowers.length; i++ ) {
 				if( !okToPick[i] ) continue;
 				
 				// Does this formant region have more power?
-				if( bestIndex==-1 || VPowers[i] > VPowers[bestIndex] ) {
+				if( bestIndex==-1 || VFormantPowers[i] > VFormantPowers[bestIndex] ) {
 					bestIndex = i;
 				}
 			}
 			
-			if( bestIndex==-1 ) bestIndex = VPowers.length-1;	// D'oh. Probably the entire frequency band is occupied now.
+			if( bestIndex==-1 ) bestIndex = VFormantPowers.length-1;	// D'oh. Probably the entire frequency band is occupied now.
 			
 			bestIndexes[v] = bestIndex;
 			
@@ -238,9 +272,35 @@ public class FormantDetector extends Object
 		var ratios:Vector.<Number> = new Vector.<Number>( Const.VOICED_OPS, true );
 		for( v=0; v<Const.VOICED_OPS; v++ ) {
 			var idx:int = bestIndexes[v];
+			
+			// At this position, average out the frequencies vs power, to determine what the formant frequency is.
+			// Don't pick a value directly from bandFreqs, because it will sound robotic.
+			var totalFreq:Number = 0;
+			var totalFreqPower:Number = 0;
+			for( f=-Const.FORMANT_DETECT_BANDWIDTH+1; f<Const.FORMANT_DETECT_BANDWIDTH; f++ ) {
+				var atIndex:int = idx + f;
+				
+				// Out of bounds?
+				if( f < 0 ) continue;
+				if( f >= VTruePowers.length ) continue;
+				
+				var thisPower:Number = VTruePowers[atIndex] * freqWindow[Math.abs(f)];
+				totalFreqPower += thisPower;
+				totalFreq += bandFreqs[atIndex] * thisPower;
+			}
+			
+			var finalFreq:Number;
+			if( !totalFreqPower ) {
+				//trace ("totalFreqPower is absurd:", totalFreqPower, totalFreq);
+				finalFreq = bandFreqs[idx];
+			} else {
+				finalFreq = totalFreq / totalFreqPower;
+				finalFreq = Math.max( 10, Math.min( Const.IMPORT_HIGHEST_FORMANT_FREQ, finalFreq ));	// sanity checkin'
+			}
+			
 			// Why are the highest formants so much louder?? Hmmm
-			VOps[v] = new OperatorFrame( VPowers[idx] /* / VFreqs[idx]*/, VFreqs[idx] );
-			UOps[v] = new OperatorFrame( UPowers[idx] /* / UFreqs[idx]*/, UFreqs[idx] );
+			VOps[v] = new OperatorFrame( VTruePowers[idx] /* / VFreqs[idx]*/, finalFreq );
+			UOps[v] = new OperatorFrame( UTruePowers[idx] /* / UFreqs[idx]*/, finalFreq );
 			ratios[v] = vuRatios[idx];
 		}
 		//trace("Chose vu ratios:", ratios);
