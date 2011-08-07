@@ -180,7 +180,7 @@ public class AudioImportView extends Sprite
 				_isLabelDirty = false;
 			} else {
 				_fseq = new FormantSequence();
-				_pitchDetector = new PitchDetector( _parser, 110.0, 880.0 );
+				_pitchDetector = new PitchDetector( _parser, 55.0, 880.0 );
 				showProgBar();
 				if( _skip && !_skip.parent ) addChild( _skip );
 			}
