@@ -69,6 +69,22 @@ public class EditorView extends Sprite
 			button.y = _freqView.y + Const.GRAPH_FREQ_HEIGHT + 80;
 			_opButtons.push( button );
 		}
+		
+		// Special buttons: << ALL VOICED, etc
+		for each( var type:String in [OperatorButtonView.ALL_VOICED, OperatorButtonView.ALL_UNVOICED] ) {
+			button = new OperatorButtonView( type );
+			button.x = Const.VOICED_OPS * 70 + 12;
+			button.y = _freqView.y + Const.GRAPH_FREQ_HEIGHT + ((type==OperatorButtonView.ALL_UNVOICED) ? 92 : 28);
+			_opButtons.push( button );
+		}
+		
+		// ALL "+" button
+		button = new OperatorButtonView( OperatorButtonView.ALL );
+		button.x = Const.VOICED_OPS * 70 + 48;
+		button.y = _freqView.y + Const.GRAPH_FREQ_HEIGHT + 62;
+		_opButtons.push( button );
+		
+		// Add the listeners & add to stage
 		for each( button in _opButtons ) {
 			button.addEventListener( MouseEvent.CLICK, opButtonClick, false, 0, true );
 			addChild( button );
@@ -142,22 +158,73 @@ public class EditorView extends Sprite
 	}
 	
 	private function opButtonClick( e:MouseEvent ) :void {
-		var button:OperatorButtonView = OperatorButtonView( e.currentTarget );
-
-		if( e.shiftKey ) {
-			button.isOn = !button.isOn;
+		var clickedBtn:OperatorButtonView = OperatorButtonView( e.currentTarget );
+		var btn:OperatorButtonView;	// temporary variable
+		
+		if( clickedBtn.isNumbered ) {
+			// If the shift key is pressed, don't cancel any other buttons
+			if( e.shiftKey ) {
+				clickedBtn.isOn = !clickedBtn.isOn;
+			} else {
+				for each( btn in _opButtons ) {
+					// Enable only the button that was clicked
+					if( btn.isNumbered ) btn.isOn = (btn == clickedBtn);
+				}
+			}
+			
+		// Special buttons
 		} else {
-			for each( var btn:OperatorButtonView in _opButtons ) {
-				btn.isOn = (btn == button);
+			// When the user shift-clicks special buttons, if the target buttons are all ON, then turn them OFF.
+			// Keep track of the target buttons that were ON.
+			var targetsWereOn:Array = [];
+			
+			for each( btn in _opButtons ) {
+				if( !btn.isNumbered ) continue;	// ignore special buttons, only affect numbered buttons
+				
+				// If this btn type matches the special button we clcked, then set isOn to true
+				var isTargetType:Boolean = (clickedBtn.type == OperatorButtonView.ALL)
+							|| (clickedBtn.type == OperatorButtonView.ALL_UNVOICED && btn.type == Const.UNVOICED )
+							|| (clickedBtn.type == OperatorButtonView.ALL_VOICED && btn.type == Const.VOICED );
+							
+				// Shift key: Leave other buttons on
+				if( e.shiftKey ) {
+					if( isTargetType && btn.isOn ) targetsWereOn.push( btn );
+					btn.isOn = (btn.isOn || isTargetType);
+				} else {
+					btn.isOn = isTargetType;
+				}
+			}
+			
+			// Check to see if the user actually wanted to switch all the targets OFF. (shift key)
+			if( e.shiftKey ) {
+				switch( clickedBtn.type ) {
+					case OperatorButtonView.ALL_UNVOICED:
+					case OperatorButtonView.ALL_VOICED:
+						if( targetsWereOn.length == 8 ) {
+							for each( btn in targetsWereOn ) {
+								btn.isOn = false;
+							}
+						}
+						break;
+						
+					case OperatorButtonView.ALL:
+						if( targetsWereOn.length == 16 ) {
+							for each( btn in targetsWereOn ) {
+								btn.isOn = false;
+							}
+						}
+						break;
+				}
 			}
 		}
 		
+		// Update the state of each OperatorView (whether it's drawable, etc)
 		var voiced:Array = [];
 		var unvoiced:Array = [];
-		for each( button in _opButtons ) {
-			switch( button.type ) {
-				case Const.VOICED:		voiced.push( button.isOn ); break;
-				case Const.UNVOICED:	unvoiced.push( button.isOn ); break;
+		for each( btn in _opButtons ) {
+			switch( btn.type ) {
+				case Const.VOICED:		voiced.push( btn.isOn ); break;
+				case Const.UNVOICED:	unvoiced.push( btn.isOn ); break;
 			}
 		}
 		
