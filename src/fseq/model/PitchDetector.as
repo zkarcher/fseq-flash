@@ -28,6 +28,7 @@ public class PitchDetector extends Object
 	// CLASS CONSTANTS
 	//--------------------------------------
 	private static const DEBUG :Boolean = false;
+	private static const QUICK_COMB_INTERVAL :int = 20;
 	
 	//--------------------------------------
 	//  CONSTRUCTOR
@@ -69,12 +70,6 @@ public class PitchDetector extends Object
 		
 		var start:Date = new Date();
 		
-		if( DEBUG ) {
-			_pitches[_index] = 110.0;
-			_index++;
-			return 0.0001;
-		}
-		
 		var windowWidth:int = Math.round( Const.SAMPLE_RATE / _lowerLimit );
 		var samps:Vector.<Number> = _parser.getMonoSamplesAtProgress( Number(_index)/Const.FRAMES, windowWidth*2 );		
 		
@@ -84,14 +79,34 @@ public class PitchDetector extends Object
 		// Start by testing the lowest allowed pitch, work to the highest
 		var combLow:int = windowWidth;
 		var combHigh:int = Math.ceil( Const.SAMPLE_RATE / _upperLimit );
-		for( var comb:int=combLow; comb>=combHigh; comb-- ) {
-			var power:Number = 0;
-			for( var w:int=0; w<comb; w++ ) {
+		var comb:int, power:Number, w:int;
+		for( comb=combLow; comb>=combHigh; comb-=QUICK_COMB_INTERVAL ) {
+			power = 0;
+			for( w=0; w<comb; w++ ) {
 				power += samps[w] * samps[w+comb];
 			}
 			
 			// Try to compensate for octave errors: Multiply by the comb width
 			//power *= comb;	// NO, we're already summing less samples for narrower combs
+			
+			if( power > bestPower ) {
+				bestPower = power;
+				bestComb = comb;
+			}
+		}
+		
+		// Now we've isolated the best comb response, +/- QUICK_COMB_INTERVAL/2.
+		// Get more granular, and find the very best response.
+		var oldBest:int = bestComb;
+		combLow = Math.min( windowWidth, oldBest+QUICK_COMB_INTERVAL/2 );
+		combHigh = Math.max( Math.ceil( Const.SAMPLE_RATE / _upperLimit ), oldBest-QUICK_COMB_INTERVAL/2 );
+		for( comb=combLow; comb>=combHigh; comb-- ) {
+			if( comb==oldBest ) continue;	// we already checked this one
+
+			power = 0;
+			for( w=0; w<comb; w++ ) {
+				power += samps[w] * samps[w+comb];
+			}
 			
 			if( power > bestPower ) {
 				bestPower = power;
