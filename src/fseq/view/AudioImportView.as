@@ -250,7 +250,7 @@ public class AudioImportView extends Sprite
 						break;
 					
 					default:
-						_formantDetector = new FormantDetector( _spectrum, _fseq.pitch(), DetectionType.smoothness(_formantType) );
+						_formantDetector = new FormantDetector( _spectrum, _fseq.pitch(), _formantType );
 						break;
 				}
 				showProgBar();
