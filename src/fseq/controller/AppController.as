@@ -91,6 +91,11 @@ public class AppController extends Sprite
 		_speed.y = 60;
 		addChild( _speed );
 		
+		_speedLabel = new CustomTextView( "SPEED", {color:0xffffff, size:13} );
+		_speedLabel.x = _speed.x + _speed.width + 10;
+		_speedLabel.y = _speed.y - 4;
+		addChild( _speedLabel );
+		
 		addEventListener( Event.ENTER_FRAME, enterFrameHandler, false, 0, true );
 		
 		//
@@ -148,6 +153,7 @@ public class AppController extends Sprite
 	// Form controls
 	private var _presets :ComboBox;
 	private var _speed :Slider;
+	private var _speedLabel :CustomTextView;
 	
 	// Audio import
 	private var _import :AudioImportView;

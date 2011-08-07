@@ -13,6 +13,7 @@ package fseq.view {
 import flash.display.*;
 import flash.events.*;
 import flash.geom.*;
+import flash.text.*;
 import caurina.transitions.Tweener;
 import com.zacharcher.color.*;
 import com.zacharcher.math.*;
@@ -38,6 +39,12 @@ public class CustomTextView extends CustomText_mc
 		
 		mouseEnabled = mouseChildren = false;
 		text = str;
+
+		if( _params.hasOwnProperty('size') ) {
+			var format:TextFormat = new TextFormat();
+			format.size = Number( _params['size'] );
+			tf.setTextFormat( format );
+		}
 	}
 	
 	//--------------------------------------

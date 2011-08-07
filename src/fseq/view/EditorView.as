@@ -1,7 +1,11 @@
 package fseq.view {
 
 /**
- *	Class description.
+ *	Manages the following:
+ *    -- 1 GraphView, displaying the Operator frequencies over time.
+ *    -- (Eventually there will be a second, smaller GraphView for the amplitudes.)
+ *    -- Buttons for Operators & Tools.
+ *    -- EditorHistory object, which makes undo/redo operations possible.
  *
  *	@langversion ActionScript 3.0
  *	@playerversion Flash 10.0
