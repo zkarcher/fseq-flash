@@ -127,7 +127,7 @@ public class AudioImportView extends Sprite
 	private var _opViews :Vector.<OperatorView>;
 	
 	// Settings
-	private static var _formantType :String = DetectionType.FORMANTS_NONE;
+	private static var _formantType :String = DetectionType.FORMANTS_MEDIUM;
 	private var _formantComboBox :ComboBox;
 	
 	// Buttons
