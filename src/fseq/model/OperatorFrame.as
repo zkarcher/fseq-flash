@@ -17,14 +17,18 @@ public class OperatorFrame extends Object
 		freq = inFreq;
 	}
 	
-	public var amp :Number;	// FS1R uses 7-bit numbers
-	public var freq :Number;
-	
-	// Convert semitone number to hertz
-	public function get syxFreq() :uint {
-		// TODO, convert freq to 14-bit syxFreq
-		return 0;
+	private var _amp :Number;
+	public function get amp() :Number { return _amp; }
+	public function set amp( n:Number ) :void {
+		_amp = Math.max( 0, n );
 	}
+	
+	private var _freq :Number;
+	public function get freq() :Number { return _freq; }
+	public function set freq( n:Number ) :void {
+		_freq = Math.max( n, 1.0 );	// Never set below 1 hz :P
+	}
+	
 	public static function syxToFreq( syx:uint ) :Number {
 		// Reverse-engineered after a little hacking.
 		// The frequencies probably aren't perfect yet.
@@ -44,10 +48,6 @@ public class OperatorFrame extends Object
 		return int( Num.dither( 0x3fff - (diff * 512.0) ) );
 	}
 	
-	public function get syxAmp() :uint {
-		// TODO, convert the amp db decimal back to 7-bit format.
-		return 0;
-	}
 	public static function syxToAmp( syx:uint ) :Number {
 		// 7-bit number. Convert to db.
 		// How is it measured, 6 db steps for each 50% attenuation? 8.5 steps?
