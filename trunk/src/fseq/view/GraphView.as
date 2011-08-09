@@ -135,11 +135,12 @@ public class GraphView extends Sprite
 	}
 	
 	// Set with arrays of Booleans
-	public function setEditableOps( pitch:Boolean, voiced:Array, unvoiced:Array ) :void {
+	public function setEditableOps( isPitchOn:Boolean, voiced:Array, unvoiced:Array ) :void {
 		for each( var opView:OperatorView in _opViews ) {
 			switch( opView.type ) {
 				case Const.VOICED:		opView.isEditable = voiced[opView.id]; break;
 				case Const.UNVOICED:	opView.isEditable = unvoiced[opView.id]; break;
+				case Const.PITCH:		opView.isEditable = isPitchOn; break;
 			}
 		}
 	}

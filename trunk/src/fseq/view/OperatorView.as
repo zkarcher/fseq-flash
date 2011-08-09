@@ -161,7 +161,11 @@ public class OperatorView extends Sprite
 	public function set hilite( b:Boolean ) :void {
 		if( b ) {
 			var dark:Number = Const.INACTIVE_BRIGHTNESS;
-			this.transform.colorTransform = new ColorTransform( dark,dark,dark,1, 0x7f,0x7f,0x7f,0 );
+			if( type == Const.PITCH ) {
+				this.transform.colorTransform = new ColorTransform( dark,dark,dark,1, 0x7f,0x7f,0x3f,0 );	// yellow tint
+			} else {
+				this.transform.colorTransform = new ColorTransform( dark,dark,dark,1, 0x7f,0x7f,0x7f,0 );
+			}
 		} else {
 			this.transform.colorTransform = new ColorTransform();
 		}

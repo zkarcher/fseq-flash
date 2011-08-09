@@ -50,6 +50,11 @@ public class OperatorButtonView extends Sprite
 				_mc.tf.text = "+";
 				break;
 				
+			case Const.PITCH:
+				_mc.gotoAndStop('wide');
+				_mc.tf.text = "pitch";
+				break;
+				
 			// Regular (small) numbered operator buttons
 			default:
 				_mc.gotoAndStop('small');

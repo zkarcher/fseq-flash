@@ -57,15 +57,21 @@ public class EditorView extends Sprite
 		// Operator buttons
 		_opButtons = new Vector.<OperatorButtonView>();
 		var button:OperatorButtonView;
+		
+		button = new OperatorButtonView( Const.PITCH );
+		button.x = 5;
+		button.y = _freqView.y + Const.GRAPH_FREQ_HEIGHT + 62;
+		_opButtons.push( button );
+		
 		for( i=0; i<Const.VOICED_OPS; i++ ) {
 			button = new OperatorButtonView( Const.VOICED, i );
-			button.x = i * 70;
+			button.x = i * 70 + 100;
 			button.y = _freqView.y + Const.GRAPH_FREQ_HEIGHT + 20;
 			_opButtons.push( button );
 		}
 		for( i=0; i<Const.UNVOICED_OPS; i++ ) {
 			button = new OperatorButtonView( Const.UNVOICED, i );
-			button.x = i * 70;
+			button.x = i * 70 + 100;
 			button.y = _freqView.y + Const.GRAPH_FREQ_HEIGHT + 80;
 			_opButtons.push( button );
 		}
@@ -73,14 +79,14 @@ public class EditorView extends Sprite
 		// Special buttons: << ALL VOICED, etc
 		for each( var type:String in [OperatorButtonView.ALL_VOICED, OperatorButtonView.ALL_UNVOICED] ) {
 			button = new OperatorButtonView( type );
-			button.x = Const.VOICED_OPS * 70 + 12;
+			button.x = Const.VOICED_OPS * 70 + 112;
 			button.y = _freqView.y + Const.GRAPH_FREQ_HEIGHT + ((type==OperatorButtonView.ALL_UNVOICED) ? 92 : 28);
 			_opButtons.push( button );
 		}
 		
 		// ALL "+" button
 		button = new OperatorButtonView( OperatorButtonView.ALL );
-		button.x = Const.VOICED_OPS * 70 + 48;
+		button.x = Const.VOICED_OPS * 70 + 140;
 		button.y = _freqView.y + Const.GRAPH_FREQ_HEIGHT + 62;
 		_opButtons.push( button );
 		
@@ -90,9 +96,9 @@ public class EditorView extends Sprite
 			addChild( button );
 		}
 		
+		// All ops, including Pitch, are editable when the app launches
 		var t:Boolean = true;
-		var f:Boolean = false;
-		setEditableOps( f, [t,t,t,t, t,t,t,t], [t,t,t,t, t,t,t,t] );
+		setEditableOps( t, [t,t,t,t, t,t,t,t], [t,t,t,t, t,t,t,t] );
 		
 		_toolButtons = new Vector.<ToolButtonView>();
 		var atX:Number = 10;
@@ -161,14 +167,14 @@ public class EditorView extends Sprite
 		var clickedBtn:OperatorButtonView = OperatorButtonView( e.currentTarget );
 		var btn:OperatorButtonView;	// temporary variable
 		
-		if( clickedBtn.isNumbered ) {
+		if( clickedBtn.isNumbered || clickedBtn.type==Const.PITCH ) {
 			// If the shift key is pressed, don't cancel any other buttons
 			if( e.shiftKey ) {
 				clickedBtn.isOn = !clickedBtn.isOn;
 			} else {
 				for each( btn in _opButtons ) {
 					// Enable only the button that was clicked
-					if( btn.isNumbered ) btn.isOn = (btn == clickedBtn);
+					if( btn.isNumbered || btn.type==Const.PITCH ) btn.isOn = (btn == clickedBtn);
 				}
 			}
 			
@@ -179,12 +185,15 @@ public class EditorView extends Sprite
 			var targetsWereOn:Array = [];
 			
 			for each( btn in _opButtons ) {
-				if( !btn.isNumbered ) continue;	// ignore special buttons, only affect numbered buttons
+				if( !btn.isNumbered && (btn.type != Const.PITCH) ) continue;	// ignore special buttons, only affect numbered buttons
 				
 				// If this btn type matches the special button we clcked, then set isOn to true
 				var isTargetType:Boolean = (clickedBtn.type == OperatorButtonView.ALL)
 							|| (clickedBtn.type == OperatorButtonView.ALL_UNVOICED && btn.type == Const.UNVOICED )
 							|| (clickedBtn.type == OperatorButtonView.ALL_VOICED && btn.type == Const.VOICED );
+							
+				// "+" includes the PITCH button
+				if( clickedBtn.type == OperatorButtonView.ALL && btn.type == Const.PITCH ) isTargetType = true;
 							
 				// Shift key: Leave other buttons on
 				if( e.shiftKey ) {
@@ -208,7 +217,7 @@ public class EditorView extends Sprite
 						break;
 						
 					case OperatorButtonView.ALL:
-						if( targetsWereOn.length == 16 ) {
+						if( targetsWereOn.length == 17 ) {	// 8 voiced, 8 unvoiced, and the PITCH button
 							for each( btn in targetsWereOn ) {
 								btn.isOn = false;
 							}
@@ -221,14 +230,16 @@ public class EditorView extends Sprite
 		// Update the state of each OperatorView (whether it's drawable, etc)
 		var voiced:Array = [];
 		var unvoiced:Array = [];
+		var isPitchOn:Boolean;
 		for each( btn in _opButtons ) {
 			switch( btn.type ) {
 				case Const.VOICED:		voiced.push( btn.isOn ); break;
 				case Const.UNVOICED:	unvoiced.push( btn.isOn ); break;
+				case Const.PITCH:		isPitchOn = btn.isOn; break;
 			}
 		}
 		
-		setEditableOps( false, voiced, unvoiced );
+		setEditableOps( isPitchOn, voiced, unvoiced );
 	}
 		
 	private function activeFseqChangedHandler( e:CustomEvent ) :void {
