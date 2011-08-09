@@ -367,6 +367,12 @@ public class AudioImportView extends Sprite
 		var minFreq:Number = centerFreq / (1+octaveWidth);
 		var maxFreq:Number = centerFreq * (1+octaveWidth);
 		
+		// At higher frequencies, we are summing more energy, so reduce the volume a bit
+		var volumeControl:Number = Math.min( 1.0, 120.0/centerFreq );	// let bass frequencies pass unaffected
+		volumeControl = (volumeControl*2+1) / 3;	// Lean a bit towards a fuller, brighter sound. Range {1...0} is now {1...0.333}
+		// Also, adjust for the octaveWidth
+		volumeControl *= 0.5 / (octaveWidth*4);
+		
 		// Now update the operator in question
 		for( var f:int=0; f<Const.FRAMES; f++ ) {
 			// Sum the energy of the surrounding bands
@@ -379,9 +385,9 @@ public class AudioImportView extends Sprite
 				amp += frameData[q];
 			}
 
-			_fseq.voiced(id).frame(f).amp = amp;
+			_fseq.voiced(id).frame(f).amp = amp * volumeControl;
 			_fseq.voiced(id).frame(f).freq = centerFreq;
-			_fseq.unvoiced(id).frame(f).amp = amp;
+			_fseq.unvoiced(id).frame(f).amp = amp * volumeControl * 0.1;	// TODO: unvoiced energy is not always 0.1!
 			_fseq.unvoiced(id).frame(f).freq = centerFreq;
 		}
 		
