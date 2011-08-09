@@ -14,6 +14,7 @@ import flash.display.*;
 import flash.events.*;
 import flash.geom.*;
 import flash.ui.*;
+import flash.utils.*;
 import fl.controls.*;
 import caurina.transitions.Tweener;
 import com.zacharcher.color.*;
@@ -29,6 +30,8 @@ public class AppController extends Sprite
 	//--------------------------------------
 	// CLASS CONSTANTS
 	//--------------------------------------
+	[Embed(source = "../../../.svn/entries", mimeType="application/octet-stream")]
+	private static var svnEntries:Class;
 	
 	//--------------------------------------
 	//  CONSTRUCTOR
@@ -114,8 +117,19 @@ public class AppController extends Sprite
 		
 		addEventListener( Event.ENTER_FRAME, initEnterFrame );
 		
+		// Adapted from: http://pixelpracht.wordpress.com/2010/06/02/resource-handling-in-flash-part-one/
+		var bytes:ByteArray = new svnEntries;
+		var text:String = bytes.toString();
+		var lines:Array = text.split( /[\n\r]+/g );
+		// SVN revision number is always the 3rd line, for now
+		var revision:String = lines[2];
+		
+		var html:String = "Press [SPACE BAR] to play.\n\n";
+		html += "revision #" + revision + " • ";
+		html += "<a href=\"http://blog.zacharcher.com/\">blog.zacharcher.com</a>";
+		
 		var caption:Caption_mc = new Caption_mc();
-		caption.tf.htmlText = "Press [SPACE BAR] to play.\n\n<a href=\"http://blog.zacharcher.com/\">blog.zacharcher.com</a>";
+		caption.tf.htmlText = html;
 		caption.x = Const.FRAMES * Const.GRAPH_SCALE_X;
 		caption.y = 700;
 		addChild( caption );
