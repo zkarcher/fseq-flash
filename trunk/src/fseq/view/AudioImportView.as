@@ -84,6 +84,7 @@ public class AudioImportView extends Sprite
 		_formantComboBox.addEventListener( Event.CHANGE, formantComboBoxChangeHandler, false, 0, true );
 		_formantComboBox.x = 800;
 		_formantComboBox.y = 60;
+		_formantComboBox.rowCount = 30;
 		addChild( _formantComboBox );
 		
 		var label:CustomTextView = new CustomTextView( "formant algorithm:", {color:0x0, size:12} );
@@ -130,6 +131,9 @@ public class AudioImportView extends Sprite
 	private static var _formantType :String = DetectionType.FORMANTS_LIGHT;
 	private var _formantComboBox :ComboBox;
 	
+	// Vocoder controls
+	private var _vocoderControls :Vector.<VocoderControlsView>;
+	
 	// Buttons
 	private var _skip :BasicButton;
 	private var _ok :BasicButton;
@@ -140,9 +144,14 @@ public class AudioImportView extends Sprite
 	//--------------------------------------
 	public function get fseq() :FormantSequence { return _fseq; }
 	public function get fseqIsReady() :Boolean {
-		return _parser && _spectrum && _fseq && _pitchDetector && _pitchDetector.isComplete && _formantDetector && _formantDetector.isComplete;
+		return _parser && _spectrum && _fseq && _pitchDetector && _pitchDetector.isComplete &&
+		 		(isVocoderSelected || (_formantDetector && _formantDetector.isComplete));
 	}
-		
+	
+	public function get isVocoderSelected() :Boolean {
+		return DetectionType.isVocoder( _formantComboBox.value );
+	}
+	
 	//--------------------------------------
 	//  PUBLIC METHODS
 	//--------------------------------------
@@ -234,7 +243,7 @@ public class AudioImportView extends Sprite
 			}
 			_isPitchSet = true;
 			
-		} else if( !_formantDetector ) {
+		} else if( !isVocoderSelected && !_formantDetector ) {
 			if( _skip && _skip.parent ) _skip.parent.removeChild( _skip );
 			hideFseqView();
 			
@@ -245,14 +254,7 @@ public class AudioImportView extends Sprite
 				_label.text = "Detecting formants...";
 				_isLabelDirty = false;
 			} else {
-				switch( _formantType ) {
-					case DetectionType.VOCODER:
-						break;
-					
-					default:
-						_formantDetector = new FormantDetector( _spectrum, _fseq.pitch(), _formantType );
-						break;
-				}
+				_formantDetector = new FormantDetector( _spectrum, _fseq.pitch(), _formantType );
 				showProgBar();
 			}
 
@@ -292,9 +294,7 @@ public class AudioImportView extends Sprite
 			showFseqView();
 			addChild( _ok );
 		} else if( _wasReadyLastFrame && !fseqIsReady ) {
-			_label.visible = true;
-			hideFseqView();
-			_ok.parent.removeChild( _ok );
+			formantsAreDirty();
 		}
 		
 		_wasReadyLastFrame = fseqIsReady;
@@ -309,8 +309,9 @@ public class AudioImportView extends Sprite
 
 		_formantType = _formantComboBox.value;	// store this for later
 		_formantDetector = null;	// on next enterFrame, this will be recreated
+		formantsAreDirty();
 	}
-	
+		
 	//
 	// BUTTONS
 	//
@@ -328,9 +329,20 @@ public class AudioImportView extends Sprite
 		dispatchEvent( new CustomEvent( CustomEvent.CANCEL ));
 	}
 	
+	private function vocoderControlsUpdate( e:CustomEvent ) :void {
+		updateVocoderOperator( e.currentTarget['id'] );
+	}
+	
 	//--------------------------------------
 	//  PRIVATE & PROTECTED INSTANCE METHODS
 	//--------------------------------------
+	private function formantsAreDirty() :void {
+		_wasReadyLastFrame = false;
+		if( _label ) _label.visible = true;
+		hideFseqView();
+		if( _ok && _ok.parent ) _ok.parent.removeChild( _ok );
+	}
+	
 	private function showProgBar() :void {
 		_progBar.visible = true;
 		_progBar.width = 1;
@@ -342,6 +354,43 @@ public class AudioImportView extends Sprite
 	
 	private function hideProgBar() :void {
 		if( _progBar && _progBar.parent ) _progBar.parent.removeChild( _progBar );
+	}
+	
+	// When the user adjusts the VocoderControls, we need to re-examine the spectral data & set the Operator data
+	private function updateVocoderOperator( id:int ) :void {
+		var freqY:Number = _vocoderControls[id].freqY;
+		var centerFreq:Number = GraphView.yToFreq( _spectrumView.height, freqY );
+		var octaveWidth:Number = DetectionType.vocoderBandWidth( _formantComboBox.value );
+		var analysisFreqs:Vector.<Number> = _spectrum.freqs;
+		
+		// We need to sum the surrounding +/-octaveWidth energy.
+		var minFreq:Number = centerFreq / (1+octaveWidth);
+		var maxFreq:Number = centerFreq * (1+octaveWidth);
+		
+		// Now update the operator in question
+		for( var f:int=0; f<Const.FRAMES; f++ ) {
+			// Sum the energy of the surrounding bands
+			var amp:Number = 0;
+			
+			var frameData:Vector.<Number> = _spectrum.frame( f );
+			for( var q:int=0; q<analysisFreqs.length-1; q++ ) {
+				if( analysisFreqs[q] < minFreq ) continue;
+				if( analysisFreqs[q] > maxFreq ) break;	// safe to exit earlier; subsequent frequencies will be higher
+				amp += frameData[q];
+			}
+
+			_fseq.voiced(id).frame(f).amp = amp;
+			_fseq.voiced(id).frame(f).freq = centerFreq;
+			_fseq.unvoiced(id).frame(f).amp = amp;
+			_fseq.unvoiced(id).frame(f).freq = centerFreq;
+		}
+		
+		// Find the relevant OperatorViews and redraw them
+		for each( var opView:OperatorView in _opViews ) {
+			if( opView.id == id ) {
+				opView.redraw( _fseq, 0, Const.FRAMES-1 );
+			}
+		}
 	}
 	
 	private function showFseqView() :void {
@@ -365,8 +414,28 @@ public class AudioImportView extends Sprite
 			opView.alpha = 0.7;
 			addChild( opView );
 		}
+		
+		// Vocoder controls
+		if( isVocoderSelected ) {
+			if( !_vocoderControls ) {
+				_vocoderControls = new Vector.<VocoderControlsView>( 8, true );
+				for( i=0; i<8; i++ ) {
+					var vc:VocoderControlsView;
+					vc = new VocoderControlsView( i, rect );
+					vc.x = _spectrumView.x;
+					vc.y = _spectrumView.y;
+					vc.addEventListener( CustomEvent.VOCODER_CONTROLS_UPDATE, vocoderControlsUpdate, false, 0, true );
+					_vocoderControls[i] = vc;
+				}
+			}
+
+			for( i=0; i<8; i++ ) {
+				addChild( _vocoderControls[i] );	// Make sure these are all on top of the display list
+				updateVocoderOperator( i );
+			}
+		}
 	}
-	
+		
 	private function hideFseqView() :void {
 		if( _opViews ) {
 			for each( var opView:OperatorView in _opViews ) {
@@ -374,6 +443,13 @@ public class AudioImportView extends Sprite
 			}
 		}
 		_opViews = null;
+		
+		if( _vocoderControls ) {
+			for each( var vc:VocoderControlsView in _vocoderControls ) {
+				vc.destroy();
+			}
+		}
+		_vocoderControls = null;
 	}
 }
 
