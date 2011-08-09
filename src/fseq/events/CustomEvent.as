@@ -21,6 +21,9 @@ public class CustomEvent extends Event
 	// History
 	public static const ACTIVE_FSEQ_CHANGED :String = "ACTIVE_FSEQ_CHANGED";
 	
+	// Audio Import
+	public static const VOCODER_CONTROLS_UPDATE :String = "VOCODER_CONTROLS_UPDATE";
+	
 	public function CustomEvent(type:String, inData:Object=null, bubbles:Boolean=true, cancelable:Boolean=false)
 	{
 		super(type, bubbles, cancelable);
