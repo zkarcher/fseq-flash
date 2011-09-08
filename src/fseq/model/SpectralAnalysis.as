@@ -85,7 +85,7 @@ public class SpectralAnalysis extends Object
 		
 		// Other processing steps (FormantDetector, etc) need to know what frequencies were analyzed
 		_freqs = new Vector.<Number>( Const.FFT_BINS/2, true );
-		for( var fq:int=0; fq<_frames.length; fq++ ) {
+		for( var fq:int=0; fq<_freqs.length; fq++ ) {
 			_freqs[fq] = ((Const.SAMPLE_RATE*0.5) / (Const.FFT_BINS/2)) * (fq+1);
 		}
 	}
