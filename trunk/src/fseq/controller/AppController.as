@@ -77,7 +77,7 @@ public class AppController extends Sprite
 			_presets.addItem( {label:"       "+str, data:"fseqs/fs1r/"+str} );
 		}
 		
-		_presets.x = 530;
+		_presets.x = 758;
 		_presets.y = 20;
 		_presets.width += 100;
 		_presets.rowCount = 30;
@@ -92,7 +92,7 @@ public class AppController extends Sprite
 		_speed.liveDragging = true;
 		_speed.setSize( 200, 40 );
 		_speed.addEventListener( Event.CHANGE, speedChangeHandler, false, 0, true );
-		_speed.x = 530;
+		_speed.x = _presets.x;
 		_speed.y = 60;
 		addChild( _speed );
 		
