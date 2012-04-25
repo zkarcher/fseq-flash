@@ -112,6 +112,11 @@ public class EditorView extends Sprite
 			_toolButtons.push( toolButton );
 		}
 		hiliteToolButton( _toolButtons[0] );
+		
+		_toolControlsSprite = new Sprite();
+		_toolControlsSprite.x = atX + 100;
+		_toolControlsSprite.y = -50;
+		addChild( _toolControlsSprite );
 	}
 	
 	//--------------------------------------
@@ -124,6 +129,7 @@ public class EditorView extends Sprite
 	
 	private var _opButtons :Vector.<OperatorButtonView>;
 	private var _toolButtons :Vector.<ToolButtonView>;
+	private var _toolControlsSprite :Sprite;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -139,6 +145,9 @@ public class EditorView extends Sprite
 		trace("** EditorView.activeTool: No active tool!");
 		return tb;
 	}
+	
+	// Vowel selector, etc. gets added to this:
+	public function get toolControlsSprite() :Sprite { return _toolControlsSprite; }
 	
 	public function get history() :EditorHistory { return _history; }
 	

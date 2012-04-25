@@ -3,6 +3,10 @@
 -- voiced formants will have higher (bandPower/totalPower), examine the max of those
 
 
+Phonetic chart:
+http://en.wikipedia.org/wiki/International_Phonetic_Alphabet_chart_for_English_dialects
+
+
 
 TODO
 ====
