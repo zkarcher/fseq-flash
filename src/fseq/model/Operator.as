@@ -58,6 +58,7 @@ public class Operator extends Object
 	//--------------------------------------
 	//  GETTER/SETTERS
 	//--------------------------------------
+	public function get type() :String { return _type; }
 	public function get isVoiced() :Boolean { return _type == Const.VOICED; }
 	public function get isUnvoiced():Boolean { return _type == Const.UNVOICED; }
 	public function get isPitch() :Boolean { return _type == Const.PITCH; }
