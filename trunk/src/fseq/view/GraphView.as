@@ -85,6 +85,7 @@ public class GraphView extends Sprite
 	private var _hiliteOpViews :Array;
 	private var _editOps :Array;
 	private var _editType :String;
+	private var _firstMouseLoc :Point;	// Retain the "origin" of the edit, so we can draw lines from a starting point, etc.
 	private var _lastMouseLoc :Point;
 	
 	private var _scan :Bitmap;
@@ -154,7 +155,9 @@ public class GraphView extends Sprite
 	//--------------------------------------
 	private function mouseDownHandler( e:MouseEvent ) :void {
 		// Dispatch the event FIRST so the editor clones the Fseq
-		dispatchEvent( new CustomEvent( CustomEvent.EDIT_START, {type:EditType.FREEHAND_DRAW}) );
+		var activeTool:ToolButtonView = AppController.instance.activeTool;
+		_editType = activeTool.editType;
+		dispatchEvent( new CustomEvent( CustomEvent.EDIT_START, {type:_editType}) );
 
 		_isMouseDown = true;
 		
@@ -163,8 +166,7 @@ public class GraphView extends Sprite
 			_editOps.push( opView.operatorInSequence(_fseq) );
 		}
 		
-		_lastMouseLoc = new Point( mouseX, mouseY );
-		_editType = EditType.FREEHAND_DRAW;
+		_firstMouseLoc = _lastMouseLoc = new Point( mouseX, mouseY );
 		performEditStep();
 	}
 	
@@ -235,28 +237,73 @@ public class GraphView extends Sprite
 	}
 	
 	private function performEditStep() :void {
-		var f:int, i:int;
+		var f:int, i:int, leftFreq:Number, rightFreq:Number;
 		var op:Operator;
 		var opView:OperatorView;
 		
+		var firstMouseFrame:int = Num.clamp( _firstMouseLoc.x / Const.GRAPH_SCALE_X, 0, Const.FRAMES-1 );
 		var lastMouseFrame:int = Num.clamp( _lastMouseLoc.x / Const.GRAPH_SCALE_X, 0, Const.FRAMES-1 );
 		var mouseFrame:int = Num.clamp( mouseX / Const.GRAPH_SCALE_X, 0, Const.FRAMES-1 );
 		var leftFrame:int = Math.min( lastMouseFrame, mouseFrame );
 		var rightFrame:int = Math.max( lastMouseFrame, mouseFrame );
 		
 		switch( _editType ) {
-			case EditType.FREEHAND_DRAW:
+			case EditType.EDIT_FREEHAND_DRAW:
 				for each( op in _editOps ) {
 					if( leftFrame == rightFrame ) {
 						op.frame(leftFrame).freq = yToFreq( mouseY );
 					} else {
 						for( f=leftFrame; f<=rightFrame; f++ ) {
-							var leftFreq:Number = yToFreq( (leftFrame==lastMouseFrame) ? _lastMouseLoc.y : mouseY );
-							var rightFreq:Number = yToFreq( (rightFrame==lastMouseFrame) ? _lastMouseLoc.y : mouseY );
+							leftFreq = yToFreq( (leftFrame==lastMouseFrame) ? _lastMouseLoc.y : mouseY );
+							rightFreq = yToFreq( (rightFrame==lastMouseFrame) ? _lastMouseLoc.y : mouseY );
 							op.frame(f).freq = Num.interpolate( leftFreq, rightFreq, Number(f-leftFrame)/(rightFrame-leftFrame) );
 						}
 					}
 				}
+				break;
+				
+			case EditType.EDIT_LINE_DRAW:
+				// Let's be super-lazy. Clone the _editAtStart data, then just draw a line from the _firstMouseLoc to the new location.
+				var history:EditorHistory = AppController.instance.editorHistory;
+				
+				for each( op in _editOps ) {
+					var opAtStart:Operator;
+					if( op.isVoiced ) {
+						opAtStart = history.editAtStart.voiced( op.index );
+					} else if( op.isUnvoiced ) {
+						opAtStart = history.editAtStart.unvoiced( op.index );
+					} else if( op.isPitch ) {
+						opAtStart = history.editAtStart.pitch();
+					}
+					
+					// Clone the _editAtStart data.
+					for( f=0; f<Const.FRAMES; f++ ) {
+						op.frame(f).freq = opAtStart.frame(f).freq;
+						//op.frame(f).amp = opAtStart.frame(f).amp;
+					}
+					
+					// Now draw a line
+					if( firstMouseFrame <= mouseFrame ) {
+						leftFrame = firstMouseFrame;
+						leftFreq = yToFreq( _firstMouseLoc.y );
+						rightFrame = mouseFrame;
+						rightFreq = yToFreq( mouseY );
+					} else {
+						rightFrame = firstMouseFrame;
+						rightFreq = yToFreq( _firstMouseLoc.y );
+						leftFrame = mouseFrame;
+						leftFreq = yToFreq( mouseY );
+					}
+					
+					for( f=leftFrame; f<=rightFrame; f++ ) {
+						op.frame(f).freq = Num.interpolate( leftFreq, rightFreq, Number(f-leftFrame)/(rightFrame-leftFrame) );
+					}
+				}
+				
+				// Redraw the whole thing :P
+				leftFrame = 0;
+				rightFrame = Const.FRAMES-1;
+				
 				break;
 		}
 		

@@ -33,7 +33,7 @@ public class FormantSequence extends Object
 		if( inPitch ) {
 			_pitch = inPitch;
 		} else {
-			_pitch = new Operator();	// empty
+			_pitch = new Operator( Const.PITCH );	// empty
 		}
 		
 		if( inVoiced ) {
@@ -41,7 +41,7 @@ public class FormantSequence extends Object
 		} else {
 			_voiced = new Vector.<Operator>();
 			for( var v:int=0; v<Const.VOICED_OPS; v++ ) {
-				_voiced.push( new Operator() );
+				_voiced.push( new Operator( Const.VOICED, v ) );
 			}
 		}
 
@@ -50,7 +50,7 @@ public class FormantSequence extends Object
 		} else {
 			_unvoiced = new Vector.<Operator>();
 			for( var u:int=0; u<Const.UNVOICED_OPS; u++ ) {
-				_unvoiced.push( new Operator() );
+				_unvoiced.push( new Operator( Const.UNVOICED, u ) );
 			}
 		}
 	}

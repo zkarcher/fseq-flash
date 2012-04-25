@@ -40,7 +40,8 @@ public class EditorHistory extends EventDispatcher
 	//--------------------------------------
 	private var _history :Vector.<FormantSequence>;
 	private var _activeIndex :int = -1;
-	private var _edit :FormantSequence = null;	// <-- being edited in realtime
+	private var _editAtStart :FormantSequence = null;	// <-- When an edit begins, we capture the initial state of the FormantSequence
+	private var _edit :FormantSequence = null;			// <-- this is the FormantSequence being edited in realtime
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
@@ -54,6 +55,10 @@ public class EditorHistory extends EventDispatcher
 	public function get editSource() :FormantSequence {
 		return _history[_activeIndex];
 	}
+	
+	// Preserve the FormantSequence when an edit begins, so we can restore parts of it if needed.
+	// For example: During line drawing, we want to restore the old data if the user retracts the line.
+	public function get editAtStart() :FormantSequence { return _editAtStart; }
 	
 	public function get edit() :FormantSequence { return _edit; }
 	public function set edit( fs:FormantSequence ) :void { _edit = fs; }
@@ -70,6 +75,7 @@ public class EditorHistory extends EventDispatcher
 	
 	public function editStart() :void {
 		popLaterEdits();
+		_editAtStart = _history[_activeIndex].clone();
 		_edit = _history[_activeIndex].clone();
 		dispatchActiveChanged( false );
 	}

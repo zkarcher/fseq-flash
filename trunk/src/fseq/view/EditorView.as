@@ -102,14 +102,14 @@ public class EditorView extends Sprite
 		
 		_toolButtons = new Vector.<ToolButtonView>();
 		var atX:Number = 10;
-		for each( var str:String in Const.ALL_TOOLS ) {
-			var tool:ToolButtonView = new ToolButtonView( str );
-			tool.addEventListener( MouseEvent.CLICK, toolClick, false, 0, true );
-			tool.x = atX;
-			tool.y = -30;
-			atX += tool.width + 10;
-			//addChild( tool );
-			_toolButtons.push( tool );
+		for each( var str:String in ToolButtonView.ALL_TOOLS ) {
+			var toolButton:ToolButtonView = new ToolButtonView( str );
+			toolButton.addEventListener( MouseEvent.CLICK, toolClick, false, 0, true );
+			toolButton.x = atX;
+			toolButton.y = -30;
+			atX += toolButton.width + 10;
+			addChild( toolButton );
+			_toolButtons.push( toolButton );
 		}
 		hiliteToolButton( _toolButtons[0] );
 	}
@@ -119,8 +119,8 @@ public class EditorView extends Sprite
 	//--------------------------------------
 	private var _history :EditorHistory;
 
-	//private var _ampView :GraphView;
 	private var _freqView :GraphView;
+	//private var _ampView :GraphView;
 	
 	private var _opButtons :Vector.<OperatorButtonView>;
 	private var _toolButtons :Vector.<ToolButtonView>;
@@ -130,6 +130,14 @@ public class EditorView extends Sprite
 	//--------------------------------------
 	public function get activeSequence() :FormantSequence {
 		return _history.activeSequence;
+	}
+	
+	public function get activeTool() :ToolButtonView { 
+		for each( var tb:ToolButtonView in _toolButtons ) {
+			if( tb.isActive ) return tb;
+		}
+		trace("** EditorView.activeTool: No active tool!");
+		return tb;
 	}
 	
 	public function get history() :EditorHistory { return _history; }

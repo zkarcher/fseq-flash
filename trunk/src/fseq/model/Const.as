@@ -49,14 +49,7 @@ public class Const extends Object
 	public static const VOICED_DOT :String = "VOICED_DOT";
 	public static const INACTIVE_BRIGHTNESS :Number = 0.2;
 	public static const HIGHEST_FREQ_IN_LINEAR_VIEW :Number = 7000.0;
-	
-	// Editor tools
-	public static const FREEHAND :String = "freehand";
-	public static const LINE :String = "line";
-	public static const TRANSPOSE :String = "transpose";
-	public static const VOWEL :String = "vowel";
-	public static const ALL_TOOLS :Array = [FREEHAND,LINE,TRANSPOSE,VOWEL];
-	
+		
 	
 	public function Const()
 	{
