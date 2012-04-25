@@ -27,8 +27,11 @@ public class Operator extends Object
 	//--------------------------------------
 	//  CONSTRUCTOR
 	//--------------------------------------
-	public function Operator( inFrames:Vector.<OperatorFrame>=null ) {
+	public function Operator( inType:String, inIndex:int=-1, inFrames:Vector.<OperatorFrame>=null ) {
 		super();
+		
+		_type = inType;
+		_index = inIndex;
 		
 		if( inFrames ) {
 			_frames = inFrames;
@@ -44,11 +47,21 @@ public class Operator extends Object
 	//--------------------------------------
 	//  PRIVATE VARIABLES
 	//--------------------------------------
+	private var _type :String;
+	
+	// Voiced & unvoiced indexes count from _0_, so indexes 0..7 appear in the app as 1..8 .
+	// Pitch Operator can have any index, we don't care!
+	private var _index :int = -1;
+	
 	private var _frames :Vector.<OperatorFrame>;
 	
 	//--------------------------------------
 	//  GETTER/SETTERS
 	//--------------------------------------
+	public function get isVoiced() :Boolean { return _type == Const.VOICED; }
+	public function get isUnvoiced():Boolean { return _type == Const.UNVOICED; }
+	public function get isPitch() :Boolean { return _type == Const.PITCH; }
+	public function get index() :int { return _index; }
 	
 	//--------------------------------------
 	//  PUBLIC METHODS
@@ -62,7 +75,7 @@ public class Operator extends Object
 		for( var i:int=0; i<Const.FRAMES; i++ ) {
 			useFrames.push( _frames[i].clone() );
 		}
-		return new Operator( useFrames );
+		return new Operator( _type, _index, useFrames );
 	}
 	
 	//--------------------------------------

@@ -30,6 +30,8 @@ public class AppController extends Sprite
 	//--------------------------------------
 	// CLASS CONSTANTS
 	//--------------------------------------
+	
+	// Embedding the SVN entries file, so we can display the SVN revision number on the screen.
 	[Embed(source = "../../../.svn/entries", mimeType="application/octet-stream")]
 	private static var svnEntries:Class;
 	
@@ -180,6 +182,8 @@ public class AppController extends Sprite
 	//--------------------------------------
 	//  GETTER/SETTERS
 	//--------------------------------------
+	public function get editorHistory() :EditorHistory { return _editorView.history; }
+	public function get activeTool() :ToolButtonView { return _editorView.activeTool; }
 	
 	//--------------------------------------
 	//  PUBLIC METHODS
