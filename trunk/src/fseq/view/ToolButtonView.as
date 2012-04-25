@@ -32,7 +32,7 @@ public class ToolButtonView extends ToolButton_mc
 	public static const LINE :String = "line";
 	public static const TRANSPOSE :String = "transpose";
 	public static const VOWEL_DRAW :String = "vowel_draw";
-	public static const FUNC_DRAW :String = "function_draw";
+	public static const FUNC_DRAW :String = "func_draw";
 	public static const ALL_TOOLS :Array = [FREEHAND,LINE,TRANSPOSE,VOWEL_DRAW,FUNC_DRAW];
 	
 	//--------------------------------------

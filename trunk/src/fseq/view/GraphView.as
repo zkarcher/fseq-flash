@@ -84,6 +84,7 @@ public class GraphView extends Sprite
 	
 	private var _hiliteOpViews :Array;
 	private var _editOps :Array;
+	private var _editOpViews :Array;
 	private var _editType :String;
 	private var _firstMouseLoc :Point;	// Retain the "origin" of the edit, so we can draw lines from a starting point, etc.
 	private var _lastMouseLoc :Point;
@@ -162,8 +163,22 @@ public class GraphView extends Sprite
 		_isMouseDown = true;
 		
 		_editOps = [];
-		for each( var opView:OperatorView in _hiliteOpViews ) {
-			_editOps.push( opView.operatorInSequence(_fseq) );
+		_editOpViews = [];
+		var opView:OperatorView;
+		// Some tools (freehand & line drawing) only affect 1 operator a time.
+		var opCount:String = EditType.editOpCount(_editType);
+		if( opCount == EditType.SINGLE_OP ) {
+			for each( opView in _hiliteOpViews ) {
+				_editOps.push( opView.operatorInSequence(_fseq) );
+				_editOpViews.push( opView );
+			}
+		} else if( opCount == EditType.MULTI_OP ) {
+			for each( opView in _opViews ) {
+				if( opView.isEditable ) {
+					_editOps.push( opView.operatorInSequence(_fseq) );
+					_editOpViews.push( opView );
+				}
+			}
 		}
 		
 		_firstMouseLoc = _lastMouseLoc = new Point( mouseX, mouseY );
@@ -238,9 +253,10 @@ public class GraphView extends Sprite
 	
 	private function performEditStep() :void {
 		var f:int, i:int, leftFreq:Number, rightFreq:Number;
-		var op:Operator;
+		var op:Operator, opAtStart:Operator;
 		var opView:OperatorView;
 		
+		var history:EditorHistory = AppController.instance.editorHistory;
 		var firstMouseFrame:int = Num.clamp( _firstMouseLoc.x / Const.GRAPH_SCALE_X, 0, Const.FRAMES-1 );
 		var lastMouseFrame:int = Num.clamp( _lastMouseLoc.x / Const.GRAPH_SCALE_X, 0, Const.FRAMES-1 );
 		var mouseFrame:int = Num.clamp( mouseX / Const.GRAPH_SCALE_X, 0, Const.FRAMES-1 );
@@ -263,11 +279,8 @@ public class GraphView extends Sprite
 				break;
 				
 			case EditType.EDIT_LINE_DRAW:
-				// Let's be super-lazy. Clone the _editAtStart data, then just draw a line from the _firstMouseLoc to the new location.
-				var history:EditorHistory = AppController.instance.editorHistory;
-				
+				// Let's be super-lazy. Clone the _editAtStart data, then just draw a line from the _firstMouseLoc to the new location.				
 				for each( op in _editOps ) {
-					var opAtStart:Operator;
 					if( op.isVoiced ) {
 						opAtStart = history.editAtStart.voiced( op.index );
 					} else if( op.isUnvoiced ) {
@@ -300,18 +313,38 @@ public class GraphView extends Sprite
 					}
 				}
 				
-				// Redraw the whole thing :P
-				leftFrame = 0;
-				rightFrame = Const.FRAMES-1;
+				break;
 				
+			case EditType.EDIT_TRANSPOSE:
+				var startFreq:Number = yToFreq( _firstMouseLoc.y );
+				var newFreq:Number = yToFreq( mouseY );
+				var diff:Number = (newFreq - startFreq) / 2;	// Slower motion :P
+				
+				for each( op in _editOps ) {
+					if( op.isVoiced ) {
+						opAtStart = history.editAtStart.voiced( op.index );
+					} else if( op.isUnvoiced ) {
+						opAtStart = history.editAtStart.unvoiced( op.index );
+					} else if( op.isPitch ) {
+						opAtStart = history.editAtStart.pitch();
+					}
+					
+					for( f=0; f<Const.FRAMES; f++ ) {
+						op.frame(f).freq = Num.clamp( opAtStart.frame(f).freq + diff, 20.0, 12000.0 );
+					}
+				}
+
 				break;
 		}
 		
 		_lastMouseLoc = new Point( mouseX, mouseY );
 		
 		// Redraw the changed areas
-		for each( opView in _hiliteOpViews ) {
-			redrawOpView( opView, leftFrame, rightFrame );
+		for each( opView in _editOpViews ) {
+			//redrawOpView( opView, leftFrame, rightFrame );
+			
+			// Always redraw the whole thing :P
+			redrawOpView( opView );
 		}
 	}
 	
