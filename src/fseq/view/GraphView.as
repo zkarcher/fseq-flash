@@ -172,6 +172,7 @@ public class GraphView extends Sprite
 				_editOps.push( opView.operatorInSequence(_fseq) );
 				_editOpViews.push( opView );
 			}
+			
 		} else if( opCount == EditType.MULTI_OP ) {
 			for each( opView in _opViews ) {
 				if( opView.isEditable ) {
@@ -334,6 +335,39 @@ public class GraphView extends Sprite
 					}
 				}
 
+				break;
+				
+			case EditType.EDIT_VOWEL_DRAW:
+				// Prepare the vowel drawing frequencies
+				var tool:ToolButtonView = AppController.instance.activeTool;
+				var freqs:Array = [ tool.freq1, tool.freq2, tool.freq3 ];
+				var opacity:Number = (tool.vowelOpacity / 100.0);	// vowelOpacity is range 0..100
+				
+				// Voiced & Unvoiced ops will be 
+				var vCount:int=0, uCount:int=0;
+				
+				for each( op in _editOps ) {
+					if( op.type==Const.PITCH ) continue;	// Don't edit the Pitch operator :P
+					
+					var opOrder:int = (op.type==Const.VOICED) ? vCount : uCount;
+					
+					// Get the vowel frequency.
+					// Prevent errors: if count exceeds freqs.length, wrap around to the beginning of the freqs array.
+					var vowelFreq:Number = freqs[ opOrder % freqs.length ];
+					
+					// Apply the vowel frequencies. Interpolate with the existing freq data, via the vowel opacity setting.
+					for( f=leftFrame; f<=rightFrame; f++ ) {	// For each frame that we're drawing in...
+						op.frame(f).freq = Num.interpolate( op.frame(f).freq, vowelFreq, opacity );
+					}
+					
+					// For the next round: Increment the count, so we'll apply the next frequency in the freqs array
+					if( op.type==Const.VOICED ) {
+						vCount++;
+					} else if( op.type==Const.UNVOICED ) {
+						uCount++;
+					}
+				}
+				
 				break;
 		}
 		

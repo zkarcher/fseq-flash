@@ -185,7 +185,7 @@ public class ToolButtonView extends ToolButton_mc
 	private function updateVowelOpacity() :void {
 		if( !_controls ) return;	// sanity check
 		var vs:VowelSelector_mc = VowelSelector_mc(_controls);
-		vs.opacity_tf.text = "Opacity: " + String(int(vs.opacity_slider.value));
+		vs.opacity_tf.text = "Opacity: " + String(int(vs.opacity_slider.value)) + "%";
 		_params[VOWEL_OPACITY] = vs.opacity_slider.value;
 	}
 }
