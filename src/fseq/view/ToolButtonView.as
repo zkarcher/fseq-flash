@@ -37,10 +37,24 @@ public class ToolButtonView extends ToolButton_mc
 	public static const ALL_TOOLS :Array = [FREEHAND,LINE,TRANSPOSE,VOWEL_DRAW,FUNC_DRAW];
 	
 	// Vowel drawing
-	public static const FREQ_1 :String = "FREQ_1";
-	public static const FREQ_2 :String = "FREQ_2";
-	public static const FREQ_3 :String = "FREQ_3";
-	public static const VOWEL_OPACITY :String = "VOWEL_OPACITY";
+	private static const FREQ_1 :String = "FREQ_1";
+	private static const FREQ_2 :String = "FREQ_2";
+	private static const FREQ_3 :String = "FREQ_3";
+	private static const VOWEL_PRESSURE :String = "VOWEL_PRESSURE";
+	
+	// Function drawing
+	public static const SAW :String = "saw";
+	public static const SQUARE :String = "square";
+	public static const SINE :String = "sine";
+	public static const TRIANGLE :String = "triangle";
+	public static const OCEAN :String = "ocean";
+	public static const NOISE :String = "noise";
+	public static const ALL_FUNC_SHAPES :Array = [SAW,SQUARE,SINE,TRIANGLE,OCEAN,NOISE];
+	
+	// Function drawing tool: sets these keys in the _params object
+	private static const FUNC_SHAPE :String = "FUNC_SHAPE";
+	private static const FUNC_WIDTH :String = "FUNC_WIDTH";
+	private static const FUNC_PRESSURE :String = "FUNC_PRESSURE";
 	
 	//--------------------------------------
 	//  CONSTRUCTOR
@@ -72,6 +86,8 @@ public class ToolButtonView extends ToolButton_mc
 	
 	private var _params :Object = {};
 	
+	private var _funcNoise :Vector.<Number>;
+	
 	//--------------------------------------
 	//  GETTER/SETTERS
 	//--------------------------------------
@@ -97,11 +113,56 @@ public class ToolButtonView extends ToolButton_mc
 	public function get freq1() :Number { return _params[FREQ_1]; }
 	public function get freq2() :Number { return _params[FREQ_2]; }
 	public function get freq3() :Number { return _params[FREQ_3]; }
-	public function get vowelOpacity() :Number { return _params[VOWEL_OPACITY]; }	// 0..100
+	public function get vowelPressure() :Number { return _params[VOWEL_PRESSURE]; }	// 0..100
+	
+	// Function drawing
+	public function get funcShape() :String { return _params[FUNC_SHAPE]; }
+	public function get funcWidth() :int { return _params[FUNC_WIDTH]; }	// 1..512, always 2^n
+	public function get funcPressure() :Number { return _params[FUNC_PRESSURE]; }	// 0..100
 	
 	//--------------------------------------
 	//  PUBLIC METHODS
 	//--------------------------------------
+	
+	public function resetFuncNoise() :void {
+		_funcNoise = new Vector.<Number>( Const.FRAMES, true );
+		for( var i:int=0; i<Const.FRAMES; i++ ) {
+			_funcNoise[i] = Math.random();
+		}
+	}
+	
+	// All functions must move from 0..1
+	public function funcValueAt( p:int ) :Number {
+		var phase:Number = (p % funcWidth) / Number(funcWidth);	// 0..1, then it wraps around
+		
+		switch( funcShape ) {
+			case SAW:	
+				return phase;
+				
+			case SQUARE:
+				return (phase<0.5) ? 0 : 1;
+				
+			case TRIANGLE:
+				var t:Number = phase * 2.0;	// t = 0..2, then it wraps
+				return (t < 1.0) ? t : (2.0-t);
+				
+			case SINE:
+				return ((-Math.cos( phase*Math.PI*2 )) + 1) / 2;
+				
+			case OCEAN:
+				// Hmm. Quadratic shaping?
+				var quad:Number = ((phase-0.5)*2);
+				quad *= quad;
+				return 1.0 - quad;
+				
+			case NOISE:
+				var idx:int = int( Math.floor( Number(p) / funcWidth ));
+				return _funcNoise[idx];
+		}
+		
+		trace("** funcValueAt: I have no shape", funcShape, p);
+		return 0;
+	}
 
 	//--------------------------------------
 	//  EVENT HANDLERS
@@ -125,8 +186,25 @@ public class ToolButtonView extends ToolButton_mc
 		_isMouseDown = false;
 	}
 	
-	private function vowelOpacitySliderChange( e:SliderEvent ) :void {
-		updateVowelOpacity();
+	private function vowelPressureSliderChange( e:SliderEvent ) :void {
+		updateVowelPressure();
+	}
+	
+	private function functionShapeClick( e:MouseEvent ) :void {
+		for each( var shape:String in ALL_FUNC_SHAPES ) {
+			if( _controls[shape] && (_controls[shape] == e.currentTarget) ) {
+				_params[FUNC_SHAPE] = shape;
+			}
+		}
+		updateFuncShape();
+	}
+
+	private function funcWidthSliderChange( e:SliderEvent ) :void {
+		updateFuncWidth();
+	}
+
+	private function funcPressureSliderChange( e:SliderEvent ) :void {
+		updateFuncPressure();
 	}
 	
 	//--------------------------------------
@@ -139,10 +217,29 @@ public class ToolButtonView extends ToolButton_mc
 					var vs:VowelSelector_mc = new VowelSelector_mc();
 					vs.knob.mouseEnabled = vs.knob.mouseChildren = false;
 					vs.bg.addEventListener( MouseEvent.MOUSE_DOWN, vowelMouseDown, false, 0, true );
-					vs.opacity_slider.addEventListener( SliderEvent.CHANGE, vowelOpacitySliderChange, false, 0, true );
+					vs.pressure_slider.addEventListener( SliderEvent.CHANGE, vowelPressureSliderChange, false, 0, true );
 					_controls = vs;
 					updateVowelKnob();
-					updateVowelOpacity();
+					updateVowelPressure();
+					break;
+					
+				case FUNC_DRAW:
+					var fs:FuncSelector_mc = new FuncSelector_mc();
+					
+					// All func_buttons: stop on the correct shapes
+					for each( var shape:String in ALL_FUNC_SHAPES ) {
+						fs[shape].gotoAndStop( shape );
+						fs[shape].addEventListener( MouseEvent.CLICK, functionShapeClick, false, 0, true );
+					}
+					fs.width_slider.addEventListener( SliderEvent.CHANGE, funcWidthSliderChange, false, 0, true );
+					fs.pressure_slider.addEventListener( SliderEvent.CHANGE, funcPressureSliderChange, false, 0, true );
+					_controls = fs;
+					
+					_params[FUNC_SHAPE] = ALL_FUNC_SHAPES[0];
+					updateFuncShape();
+					updateFuncWidth();
+					updateFuncPressure();
+					
 					break;
 			}
 		}
@@ -182,11 +279,40 @@ public class ToolButtonView extends ToolButton_mc
 		//trace("freqs:", _params[FREQ_1], _params[FREQ_2], _params[FREQ_3]);
 	}
 	
-	private function updateVowelOpacity() :void {
+	private function updateVowelPressure() :void {
 		if( !_controls ) return;	// sanity check
 		var vs:VowelSelector_mc = VowelSelector_mc(_controls);
-		vs.opacity_tf.text = "Opacity: " + String(int(vs.opacity_slider.value)) + "%";
-		_params[VOWEL_OPACITY] = vs.opacity_slider.value;
+		vs.pressure_tf.text = "Pressure: " + String(int(vs.pressure_slider.value)) + "%";
+		_params[VOWEL_PRESSURE] = vs.pressure_slider.value;
+	}
+	
+	// Function drawing: Update the controls
+	private function updateFuncShape() :void {
+		if( !_controls ) return;	// sanity check
+		var fs:FuncSelector_mc = FuncSelector_mc(_controls);
+		// Assuming that _params[FUNC_SHAPE] is already set
+		for each( var shape:String in ALL_FUNC_SHAPES ) {
+			if( shape == _params[FUNC_SHAPE] ) {
+				fs[shape].transform.colorTransform = new ColorTransform();	// No color change
+			} else {
+				fs[shape].transform.colorTransform = new ColorTransform( 0.3,0.3,0.3,1, 0,0,0,0 );	// Darker grey
+			}
+		}
+	}
+	
+	private function updateFuncWidth() :void {
+		if( !_controls ) return;	// sanity check
+		var fs:FuncSelector_mc = FuncSelector_mc(_controls);
+		var w:int = int( Math.pow( 2.0, fs.width_slider.value ));
+		fs.width_tf.text = "Width: " + String(w);
+		_params[FUNC_WIDTH] = w;
+	}
+
+	private function updateFuncPressure() :void {
+		if( !_controls ) return;	// sanity check
+		var fs:FuncSelector_mc = FuncSelector_mc(_controls);
+		fs.pressure_tf.text = "Pressure: " + String(int(fs.pressure_slider.value)) + "%";
+		_params[FUNC_PRESSURE] = fs.pressure_slider.value;
 	}
 }
 
