@@ -157,6 +157,10 @@ public class GraphView extends Sprite
 	private function mouseDownHandler( e:MouseEvent ) :void {
 		// Dispatch the event FIRST so the editor clones the Fseq
 		var activeTool:ToolButtonView = AppController.instance.activeTool;
+		
+		// Function drawing tool? Reset the random noise. (Even if we don't use it.)
+		if( activeTool.type == ToolButtonView.FUNC_DRAW ) activeTool.resetFuncNoise();
+		
 		_editType = activeTool.editType;
 		dispatchEvent( new CustomEvent( CustomEvent.EDIT_START, {type:_editType}) );
 
@@ -253,7 +257,7 @@ public class GraphView extends Sprite
 	}
 	
 	private function performEditStep() :void {
-		var f:int, i:int, leftFreq:Number, rightFreq:Number;
+		var f:int, i:int, leftFreq:Number, rightFreq:Number, startFreq:Number;
 		var op:Operator, opAtStart:Operator;
 		var opView:OperatorView;
 		
@@ -317,7 +321,7 @@ public class GraphView extends Sprite
 				break;
 				
 			case EditType.EDIT_TRANSPOSE:
-				var startFreq:Number = yToFreq( _firstMouseLoc.y );
+				startFreq = yToFreq( _firstMouseLoc.y );
 				var newFreq:Number = yToFreq( mouseY );
 				var diff:Number = (newFreq - startFreq) / 2;	// Slower motion :P
 				
@@ -341,7 +345,7 @@ public class GraphView extends Sprite
 				// Prepare the vowel drawing frequencies
 				var tool:ToolButtonView = AppController.instance.activeTool;
 				var freqs:Array = [ tool.freq1, tool.freq2, tool.freq3 ];
-				var opacity:Number = (tool.vowelOpacity / 100.0);	// vowelOpacity is range 0..100
+				var pressure:Number = (tool.vowelPressure / 100.0);	// vowelPressure is range 0..100
 				
 				// Voiced & Unvoiced ops will be 
 				var vCount:int=0, uCount:int=0;
@@ -355,9 +359,9 @@ public class GraphView extends Sprite
 					// Prevent errors: if count exceeds freqs.length, wrap around to the beginning of the freqs array.
 					var vowelFreq:Number = freqs[ opOrder % freqs.length ];
 					
-					// Apply the vowel frequencies. Interpolate with the existing freq data, via the vowel opacity setting.
+					// Apply the vowel frequencies. Interpolate with the existing freq data, via the vowel pressure setting.
 					for( f=leftFrame; f<=rightFrame; f++ ) {	// For each frame that we're drawing in...
-						op.frame(f).freq = Num.interpolate( op.frame(f).freq, vowelFreq, opacity );
+						op.frame(f).freq = Num.interpolate( op.frame(f).freq, vowelFreq, pressure );
 					}
 					
 					// For the next round: Increment the count, so we'll apply the next frequency in the freqs array
@@ -368,6 +372,48 @@ public class GraphView extends Sprite
 					}
 				}
 				
+				break;
+
+			case EditType.EDIT_FUNC_DRAW:
+				var funcTool:ToolButtonView = AppController.instance.activeTool;
+
+				// Clone the _editAtStart data, then apply the function
+				for each( op in _editOps ) {
+					if( op.isVoiced ) {
+						opAtStart = history.editAtStart.voiced( op.index );
+					} else if( op.isUnvoiced ) {
+						opAtStart = history.editAtStart.unvoiced( op.index );
+					} else if( op.isPitch ) {
+						opAtStart = history.editAtStart.pitch();
+					}
+
+					// Clone the _editAtStart data.
+					for( f=0; f<Const.FRAMES; f++ ) {
+						op.frame(f).freq = opAtStart.frame(f).freq;
+						//op.frame(f).amp = opAtStart.frame(f).amp;
+					}
+					
+					startFreq = yToFreq( _firstMouseLoc.y );
+					var endFreq:Number = yToFreq( mouseY );
+					
+					// Which direction will we step
+					if( firstMouseFrame <= mouseFrame ) {
+						leftFrame = firstMouseFrame;
+						rightFrame = mouseFrame;
+					} else {
+						rightFrame = firstMouseFrame;
+						leftFrame = mouseFrame;
+					}
+					
+					for( f=leftFrame; f<=rightFrame; f++ ) {
+						var f01:Number = funcTool.funcValueAt( f );	// Always in range 0..1
+						var funcFreq:Number = Num.interpolate( startFreq, endFreq, f01 );
+						
+						// Now apply the function frequency, taking the pressure into account
+						op.frame(f).freq = Num.interpolate( op.frame(f).freq, funcFreq, (funcTool.funcPressure / 100.0) );
+					}
+				}
+
 				break;
 		}
 		
