@@ -31,7 +31,7 @@ public class Main extends Sprite
 	public function Main() {
 		trace("Hello world!");
 
-		stage.align = StageAlign.TOP_LEFT;
+		stage.align = StageAlign.TOP;
 		stage.scaleMode = StageScaleMode.NO_SCALE;
 		
 		// Tweener
