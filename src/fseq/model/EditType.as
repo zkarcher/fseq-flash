@@ -38,11 +38,11 @@ public class EditType extends Object
 		switch( editType ) {
 			case EDIT_FREEHAND_DRAW:	
 			case EDIT_LINE_DRAW:		 
-			case EDIT_FUNC_DRAW:	 
 				return SINGLE_OP;
 				
 			case EDIT_TRANSPOSE:	 
 			case EDIT_VOWEL_DRAW:	 
+			case EDIT_FUNC_DRAW:	 
 				return MULTI_OP;
 		}
 		
